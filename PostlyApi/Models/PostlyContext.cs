@@ -15,6 +15,12 @@ namespace PostlyApi.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            // Unique constraint for username
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
             // Follow follower relation
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Follower)

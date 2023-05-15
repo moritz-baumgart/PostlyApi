@@ -22,6 +22,9 @@ namespace PostlyApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Enable JWT Auth
+            builder.Services.AddAuthentication().AddJwtBearer();
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
@@ -35,7 +38,7 @@ namespace PostlyApi
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
+            
 
             app.MapControllers();
 

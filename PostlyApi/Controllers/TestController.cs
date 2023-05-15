@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using PostlyApi.Models;
 
 namespace PostlyApi.Controllers
@@ -16,21 +15,11 @@ namespace PostlyApi.Controllers
             _db = dbContext;
         }
 
-        [HttpGet("new")]
-        public ActionResult<String> New()
-        {
-
-            _db.Users.Add(new User("TestUser", "123"));
-            _db.SaveChanges();
-
-            return _db.Users.Count().ToString();
-        }
 
         [HttpGet("count")]
-        public ActionResult<String> Count()
+        [Authorize]
+        public ActionResult<string> Count()
         {
-
-
             return _db.Users.Count().ToString();
         }
     }
