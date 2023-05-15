@@ -1,6 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
-using PostlyApi.Models;
+using PostlyApi.Contexts;
 
 namespace PostlyApi
 {
