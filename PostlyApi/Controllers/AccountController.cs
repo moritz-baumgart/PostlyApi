@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using PostlyApi.Models;
+using PostlyApi.Models.Errors;
 using PostlyApi.Utilities;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -29,7 +31,7 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true and the jwt as string if the login was sucessful, otherwise false and no value is returned.</returns>
 
         [HttpPost("Login")]
-        public SuccessResult<string, object> Login(string username, string password)
+        public SuccessResult<string, object> Login([Required] string username, [Required] string password)
         {
             // Query the database for the user
             var user = _db.Users.FirstOrDefault(u => u.Username.Equals(username));
@@ -77,9 +79,9 @@ namespace PostlyApi.Controllers
         /// </summary>
         /// <param name="username">The username of the user, has to be available.</param>
         /// <param name="password">The user's password.</param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true and no value if the registration was successful, otherwise false and a <see cref="PostlyApi.Models.RegisterError"/>.</returns>
+        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true and no value if the registration was successful, otherwise false and a <see cref="Models.Errors.RegisterError"/>.</returns>
         [HttpPost("register")]
-        public SuccessResult<object, RegisterError> Register(string username, string password)
+        public SuccessResult<object, RegisterError> Register([Required] string username, [Required] string password)
         {
             // Check if the user already exists, if so return error
             if (_db.Users.Any(u => u.Username == username))

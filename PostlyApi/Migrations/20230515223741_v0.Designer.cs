@@ -12,7 +12,7 @@ using PostlyApi.Models;
 namespace PostlyApi.Migrations
 {
     [DbContext(typeof(PostlyContext))]
-    [Migration("20230514220043_v0")]
+    [Migration("20230515223741_v0")]
     partial class v0
     {
         /// <inheritdoc />
@@ -77,7 +77,7 @@ namespace PostlyApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Post");
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("PostlyApi.Models.User", b =>

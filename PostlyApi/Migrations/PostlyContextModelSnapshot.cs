@@ -74,7 +74,7 @@ namespace PostlyApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Post");
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("PostlyApi.Models.User", b =>

@@ -1,6 +1,4 @@
 ﻿using PostlyApi.Utilities;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PostlyApi.Models
 {
@@ -56,7 +54,7 @@ namespace PostlyApi.Models
             Username = username;
             PasswordHash = passwordHash;
             Role = role;
-            CreatedAt = DateTime.Now;
+            CreatedAt = DateTime.UtcNow;
         }
     }
 

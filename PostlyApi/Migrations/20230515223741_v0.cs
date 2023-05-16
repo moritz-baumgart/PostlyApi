@@ -56,7 +56,7 @@ namespace PostlyApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Post",
+                name: "Posts",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -67,9 +67,9 @@ namespace PostlyApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Post", x => x.Id);
+                    table.PrimaryKey("PK_Posts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Post_Users_UserId",
+                        name: "FK_Posts_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -87,9 +87,9 @@ namespace PostlyApi.Migrations
                 {
                     table.PrimaryKey("PK_Downvotes", x => new { x.DownvotedById, x.DownvotedPostsId });
                     table.ForeignKey(
-                        name: "FK_Downvotes_Post_DownvotedPostsId",
+                        name: "FK_Downvotes_Posts_DownvotedPostsId",
                         column: x => x.DownvotedPostsId,
-                        principalTable: "Post",
+                        principalTable: "Posts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -111,9 +111,9 @@ namespace PostlyApi.Migrations
                 {
                     table.PrimaryKey("PK_Upvotes", x => new { x.UpvotedById, x.UpvotedPostsId });
                     table.ForeignKey(
-                        name: "FK_Upvotes_Post_UpvotedPostsId",
+                        name: "FK_Upvotes_Posts_UpvotedPostsId",
                         column: x => x.UpvotedPostsId,
-                        principalTable: "Post",
+                        principalTable: "Posts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -135,8 +135,8 @@ namespace PostlyApi.Migrations
                 column: "FollowingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Post_UserId",
-                table: "Post",
+                name: "IX_Posts_UserId",
+                table: "Posts",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -164,7 +164,7 @@ namespace PostlyApi.Migrations
                 name: "Upvotes");
 
             migrationBuilder.DropTable(
-                name: "Post");
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "Users");

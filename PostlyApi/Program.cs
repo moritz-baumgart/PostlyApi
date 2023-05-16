@@ -1,6 +1,9 @@
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PostlyApi.Models;
+using System.Text;
 
 namespace PostlyApi
 {
@@ -23,7 +26,18 @@ namespace PostlyApi
             builder.Services.AddSwaggerGen();
 
             // Enable JWT Auth
-            builder.Services.AddAuthentication().AddJwtBearer();
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(config =>
+            {
+                config.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+                };
+            });
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
@@ -38,7 +52,7 @@ namespace PostlyApi
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-            
+
 
             app.MapControllers();
 

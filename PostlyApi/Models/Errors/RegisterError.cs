@@ -1,4 +1,4 @@
-﻿namespace PostlyApi.Models
+﻿namespace PostlyApi.Models.Errors
 {
     public enum RegisterError
     {

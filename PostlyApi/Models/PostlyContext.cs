@@ -5,7 +5,7 @@ namespace PostlyApi.Models
     public class PostlyContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        //public DbSet<Post> Posts { get; set; }
+        public DbSet<Post> Posts { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)
