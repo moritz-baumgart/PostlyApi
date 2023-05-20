@@ -52,6 +52,36 @@ namespace PostlyApi.Migrations
                     b.ToTable("Downvotes", (string)null);
                 });
 
+            modelBuilder.Entity("PostlyApi.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Comment");
+                });
+
             modelBuilder.Entity("PostlyApi.Models.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -64,7 +94,7 @@ namespace PostlyApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<long>("UserId")
@@ -167,6 +197,21 @@ namespace PostlyApi.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PostlyApi.Models.Comment", b =>
+                {
+                    b.HasOne("PostlyApi.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PostlyApi.Models.Post", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("PostId");
+
+                    b.Navigation("Author");
+                });
+
             modelBuilder.Entity("PostlyApi.Models.Post", b =>
                 {
                     b.HasOne("PostlyApi.Models.User", "Author")
@@ -191,6 +236,11 @@ namespace PostlyApi.Migrations
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PostlyApi.Models.Post", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("PostlyApi.Models.User", b =>

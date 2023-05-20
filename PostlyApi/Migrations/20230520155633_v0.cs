@@ -63,7 +63,7 @@ namespace PostlyApi.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -74,6 +74,33 @@ namespace PostlyApi.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Comment",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AuthorId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PostId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comment_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Comment_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -125,6 +152,16 @@ namespace PostlyApi.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Comment_AuthorId",
+                table: "Comment",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comment_PostId",
+                table: "Comment",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Downvotes_DownvotedPostsId",
                 table: "Downvotes",
                 column: "DownvotedPostsId");
@@ -154,6 +191,9 @@ namespace PostlyApi.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Comment");
+
             migrationBuilder.DropTable(
                 name: "Downvotes");
 

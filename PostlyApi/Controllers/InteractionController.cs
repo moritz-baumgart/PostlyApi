@@ -25,7 +25,7 @@ namespace PostlyApi.Controllers
         /// </summary>
         /// <param name="postId">The id of the post that the reaction should be added to.</param>
         /// <param name="type">The type of reaction that should be added, must be a variant of <see cref="Models.VoteInteractionType"/></param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.RegisterError.None"/> if the vote was successful, otherwise false, no value and a <see cref="Models.Errors.RegisterError"/>.</returns>
+        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the vote was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("vote")]
         [Authorize]
         public SuccessResult<object, InteractionError> UpOrDownvote([Required] int postId, [Required] VoteInteractionType type)
@@ -76,7 +76,12 @@ namespace PostlyApi.Controllers
 
 
 
-        // TODO: Add comment
+        /// <summary>
+        /// Adds the given comment text to the post with given id.
+        /// </summary>
+        /// <param name="postId">The id of the post the comment should be added to.</param>
+        /// <param name="commentContent">The text content of the post.</param>
+        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the operation was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("comment")]
         [Authorize]
         public SuccessResult<object, InteractionError> Comment([Required] int postId, [Required] string commentContent)
@@ -88,14 +93,16 @@ namespace PostlyApi.Controllers
                 return new SuccessResult<object, InteractionError>(false, InteractionError.UserNotFound);
             }
 
-            var post = _db.Posts.Find(postId);
+            var post = _db.Posts
+                .Include(p => p.Comments)
+                .First(p => p.Id == postId);
             if (post == null)
             {
                 return new SuccessResult<object, InteractionError>(false, InteractionError.PostNotFound);
             }
 
-            // TODO: Implement this and change the data model to do so.
-            throw new NotImplementedException("Comments do not yet exist in Post model");
+            post.Comments.Add(new Comment(user, DateTime.UtcNow, commentContent));
+            _db.SaveChanges();
 
             return new SuccessResult<object, InteractionError>(true, InteractionError.None);
         }

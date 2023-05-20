@@ -42,12 +42,13 @@ namespace PostlyApi.Controllers
                         Username = p.Author.Username,
                         DisplayName = p.Author.DisplayName
                     },
-                    CreatedDate = p.CreatedDate,
+                    CreatedAt = p.CreatedAt,
                     UpvoteCount = p.UpvotedBy.Count,
-                    DownvoteCount = p.DownvotedBy.Count
+                    DownvoteCount = p.DownvotedBy.Count,
+                    CommentCount = p.Comments.Count
                 })
-                .Where(p => p.CreatedDate >= from && p.CreatedDate <= to)
-                .OrderByDescending(p => p.CreatedDate)
+                .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
+                .OrderByDescending(p => p.CreatedAt)
                 .Take(maxNumber);
         }
     }
