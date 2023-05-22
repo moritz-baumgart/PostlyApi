@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
+using PostlyApi.Utilities;
 using System.ComponentModel.DataAnnotations;
 
 namespace PostlyApi.Controllers
@@ -31,25 +34,54 @@ namespace PostlyApi.Controllers
                 to = DateTime.UtcNow;
             }
 
-            return _db.Posts
-                .Select(p => new PostDTO
-                {
-                    Id = p.Id,
-                    Content = p.Content,
-                    Author = new AuthorDTO
-                    {
-                        Id = p.Author.Id,
-                        Username = p.Author.Username,
-                        DisplayName = p.Author.DisplayName
-                    },
-                    CreatedAt = p.CreatedAt,
-                    UpvoteCount = p.UpvotedBy.Count,
-                    DownvoteCount = p.DownvotedBy.Count,
-                    CommentCount = p.Comments.Count
-                })
-                .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(maxNumber);
+            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
+
+            if (user != null)
+            {
+                return _db.Posts
+                          .Include(p => p.UpvotedBy)
+                          .Include(p => p.DownvotedBy)
+                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
+                          .OrderByDescending(p => p.CreatedAt)
+                          .Take(maxNumber).Select(p => new PostDTO
+                          {
+                              Id = p.Id,
+                              Content = p.Content,
+                              Author = new AuthorDTO
+                              {
+                                  Id = p.Author.Id,
+                                  Username = p.Author.Username,
+                                  DisplayName = p.Author.DisplayName
+                              },
+                              CreatedAt = p.CreatedAt,
+                              UpvoteCount = p.UpvotedBy.Count,
+                              DownvoteCount = p.DownvotedBy.Count,
+                              CommentCount = p.Comments.Count,
+                              Vote = p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove,
+                              HasCommented = p.Comments.Any(c => c.Author == user)
+                          });
+            }
+            else
+            {
+                return _db.Posts
+                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
+                          .OrderByDescending(p => p.CreatedAt)
+                          .Take(maxNumber).Select(p => new PostDTO
+                          {
+                              Id = p.Id,
+                              Content = p.Content,
+                              Author = new AuthorDTO
+                              {
+                                  Id = p.Author.Id,
+                                  Username = p.Author.Username,
+                                  DisplayName = p.Author.DisplayName
+                              },
+                              CreatedAt = p.CreatedAt,
+                              UpvoteCount = p.UpvotedBy.Count,
+                              DownvoteCount = p.DownvotedBy.Count,
+                              CommentCount = p.Comments.Count,
+                          });
+            }
         }
     }
 }

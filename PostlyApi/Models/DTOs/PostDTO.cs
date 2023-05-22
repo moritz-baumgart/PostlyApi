@@ -9,5 +9,7 @@
         public int UpvoteCount { get; set; }
         public int DownvoteCount { get; set; }
         public int CommentCount { get; set; }
+        public VoteInteractionType? Vote { get; set; }
+        public bool? HasCommented { get; set; }
     }
 }
