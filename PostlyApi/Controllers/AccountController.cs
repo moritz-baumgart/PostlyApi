@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using PostlyApi.Models;
 using PostlyApi.Models.Errors;
@@ -94,6 +95,17 @@ namespace PostlyApi.Controllers
             _db.SaveChanges();
 
             return new SuccessResult<object, RegisterError>(true, RegisterError.None);
+        }
+
+        /// <summary>
+        /// This endpoint always returns true, but only for authorized i.e. logged in users. Can be used to check if a users JWT is still valid.
+        /// </summary>
+        /// <returns>true, always</returns>
+        [HttpGet("status")]
+        [Authorize]
+        public bool Status()
+        {
+            return true;
         }
     }
 }
