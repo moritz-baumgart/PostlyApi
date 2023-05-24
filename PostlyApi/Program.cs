@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,7 +29,9 @@ namespace PostlyApi
             {
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.WithOrigins("*");
+                    policy.WithOrigins("http://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowCredentials();
                 });
             });
 

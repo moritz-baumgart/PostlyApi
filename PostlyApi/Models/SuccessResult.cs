@@ -10,12 +10,12 @@
         /// <summary>
         /// If successful there might be a result set.
         /// </summary>
-        public T Result { get; set; }
+        public T? Result { get; set; }
 
         /// <summary>
         /// If not successful there might be an error set.
         /// </summary>
-        public E Error { get; set; }
+        public E? Error { get; set; }
 
         public SuccessResult(bool success, T result)
         {

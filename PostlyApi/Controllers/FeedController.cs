@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
 using PostlyApi.Utilities;

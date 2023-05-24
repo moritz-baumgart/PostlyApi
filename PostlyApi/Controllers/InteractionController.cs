@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostlyApi.Models;
 using PostlyApi.Models.Errors;
+using PostlyApi.Models.Requests;
 using PostlyApi.Utilities;
-using System.ComponentModel.DataAnnotations;
-using System.Data.SqlTypes;
 
 namespace PostlyApi.Controllers
 {
@@ -23,12 +22,11 @@ namespace PostlyApi.Controllers
         /// <summary>
         /// Adds the specified reaction to the post with given post id.
         /// </summary>
-        /// <param name="postId">The id of the post that the reaction should be added to.</param>
-        /// <param name="type">The type of reaction that should be added, must be a variant of <see cref="Models.VoteInteractionType"/></param>
+        /// <param name="request">A <see cref="Models.Requests.InteractionRequest"/>.</param>
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the vote was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("vote")]
         [Authorize]
-        public SuccessResult<object, InteractionError> UpOrDownvote([Required] int postId, [Required] VoteInteractionType type)
+        public SuccessResult<object, InteractionError> UpOrDownvote([FromBody] InteractionRequest request)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (user == null)
@@ -39,14 +37,14 @@ namespace PostlyApi.Controllers
             var post = _db.Posts
                 .Include(p => p.UpvotedBy)
                 .Include(p => p.DownvotedBy)
-                .Single(p => p.Id == postId);
+                .Single(p => p.Id == request.PostId);
 
             if (post == null)
             {
                 return new SuccessResult<object, InteractionError>(false, InteractionError.PostNotFound);
             }
 
-            switch (type)
+            switch (request.Type)
             {
                 case VoteInteractionType.Upvote:
                     if (post.UpvotedBy.Contains(user))
@@ -79,12 +77,11 @@ namespace PostlyApi.Controllers
         /// <summary>
         /// Adds the given comment text to the post with given id.
         /// </summary>
-        /// <param name="postId">The id of the post the comment should be added to.</param>
-        /// <param name="commentContent">The text content of the post.</param>
+        /// <param name="request">A <see cref="Models.Requests.CommentRequest"/>.</param>
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the operation was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("comment")]
         [Authorize]
-        public SuccessResult<object, InteractionError> Comment([Required] int postId, [Required] string commentContent)
+        public SuccessResult<object, InteractionError> Comment([FromBody] CommentRequest request)
         {
 
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -95,13 +92,13 @@ namespace PostlyApi.Controllers
 
             var post = _db.Posts
                 .Include(p => p.Comments)
-                .First(p => p.Id == postId);
+                .First(p => p.Id == request.PostId);
             if (post == null)
             {
                 return new SuccessResult<object, InteractionError>(false, InteractionError.PostNotFound);
             }
 
-            post.Comments.Add(new Comment(user, DateTime.UtcNow, commentContent));
+            post.Comments.Add(new Comment(user, DateTime.UtcNow, request.CommentContent));
             _db.SaveChanges();
 
             return new SuccessResult<object, InteractionError>(true, InteractionError.None);

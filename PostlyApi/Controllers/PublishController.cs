@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PostlyApi.Models;
 using PostlyApi.Models.Errors;
 using PostlyApi.Utilities;
-using System.ComponentModel.DataAnnotations;
 
 namespace PostlyApi.Controllers
 {
@@ -26,7 +25,7 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.NewPostError.None"/> if the creation was successful, otherwise false, no value and a <see cref="Models.Errors.NewPostError"/>.</returns>
         [HttpPost("newpost")]
         [Authorize]
-        public SuccessResult<object?, NewPostError> NewPost([Required] string content)
+        public SuccessResult<object?, NewPostError> NewPost([FromBody] string content)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (user == null)
