@@ -1,6 +1,6 @@
 ﻿namespace PostlyApi.Models.DTOs
 {
-    public class AuthorDTO
+    public class UserDTO
     {
         public long Id { get; set; }
         public string Username { get; set; }

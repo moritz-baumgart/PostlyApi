@@ -3,6 +3,7 @@
     public enum CommentError
     {
         None,
-        PostNotFound
+        PostNotFound,
+        UserNotFound
     }
 }

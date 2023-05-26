@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PostlyApi.Entities;
 using PostlyApi.Models;
 using PostlyApi.Models.Errors;
 using PostlyApi.Utilities;

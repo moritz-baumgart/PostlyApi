@@ -1,10 +1,12 @@
-﻿namespace PostlyApi.Models.DTOs
+﻿using PostlyApi.Enums;
+
+namespace PostlyApi.Models.DTOs
 {
     public class PostDTO
     {
         public int Id { get; set; }
         public string Content { get; set; }
-        public AuthorDTO Author { get; set; }
+        public UserDTO Author { get; set; }
         public DateTime CreatedAt { get; set; }
         public int UpvoteCount { get; set; }
         public int DownvoteCount { get; set; }

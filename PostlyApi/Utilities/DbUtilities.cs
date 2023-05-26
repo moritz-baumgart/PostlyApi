@@ -1,4 +1,5 @@
-﻿using PostlyApi.Models;
+﻿using PostlyApi.Entities;
+using PostlyApi.Models;
 using PostlyApi.Models.Errors;
 using System.Security.Claims;
 

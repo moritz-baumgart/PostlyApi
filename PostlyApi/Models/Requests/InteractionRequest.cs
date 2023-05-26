@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using PostlyApi.Enums;
 
 namespace PostlyApi.Models.Requests
 {

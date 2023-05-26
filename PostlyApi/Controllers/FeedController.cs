@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
 using PostlyApi.Utilities;
@@ -38,15 +39,15 @@ namespace PostlyApi.Controllers
             if (user != null)
             {
                 return _db.Posts
+                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
                           .Include(p => p.UpvotedBy)
                           .Include(p => p.DownvotedBy)
-                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
                           .OrderByDescending(p => p.CreatedAt)
                           .Take(maxNumber).Select(p => new PostDTO
                           {
                               Id = p.Id,
                               Content = p.Content,
-                              Author = new AuthorDTO
+                              Author = new UserDTO
                               {
                                   Id = p.Author.Id,
                                   Username = p.Author.Username,
@@ -69,7 +70,7 @@ namespace PostlyApi.Controllers
                           {
                               Id = p.Id,
                               Content = p.Content,
-                              Author = new AuthorDTO
+                              Author = new UserDTO
                               {
                                   Id = p.Author.Id,
                                   Username = p.Author.Username,

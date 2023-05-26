@@ -1,4 +1,4 @@
-﻿namespace PostlyApi.Models
+﻿namespace PostlyApi.Enums
 {
     public enum VoteInteractionType
     {
