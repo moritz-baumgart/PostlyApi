@@ -150,7 +150,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the current user doesn't have permission to delete this account:
-            if (!(currentUser == targetUser || currentUser.Role > 0))
+            if (!(currentUser == targetUser || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
@@ -189,7 +189,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the current user doesn't have permission to change this username:
-            if (!(currentUser == targetUser || currentUser.Role > 0))
+            if (!(currentUser == targetUser || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
@@ -228,7 +228,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the current user doesn't have permission to change this password:
-            if (!(currentUser.Id == userId || currentUser.Role > 0))
+            if (!(currentUser.Id == userId || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
@@ -306,7 +306,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the current user doesn't have permission to change this profile:
-            if (!(currentUser.Id == userId || currentUser.Role > 0))
+            if (!(currentUser.Id == userId || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
