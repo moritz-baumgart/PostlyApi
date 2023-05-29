@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Models;
+using PostlyApi.Models.DTOs;
 using PostlyApi.Models.Errors;
 using PostlyApi.Models.Requests;
 using PostlyApi.Utilities;
@@ -92,11 +93,39 @@ namespace PostlyApi.Controllers
                 return new SuccessResult<object, RegisterError>(false, RegisterError.UsernameAlreadyInUse);
             }
 
+            // if the role parameter is null or the current user is not an admin, set role parameter of request to default
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if ((request.Role == null) || (currentUser != null && currentUser.Role != Role.Admin))
+            {
+                request.Role = Role.User;
+            }
+
             // Otherwise add a new user and return success
-            _db.Users.Add(new User(request.Username, PasswordUtilities.ComputePasswordHash(request.Password)));
+            _db.Users.Add(new User(request.Username, request.Password, (Role) request.Role));
             _db.SaveChanges();
 
             return new SuccessResult<object, RegisterError>(true, RegisterError.None);
+        }
+
+        [HttpGet("{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<UserDTO> GetCurrentUser([FromRoute] long userId)
+        {
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            var result = new UserDTO
+            {
+                Id = targetUser.Id,
+                Username = targetUser.Username,
+                DisplayName = targetUser.DisplayName
+            };
+
+            return Ok(result);
         }
 
         [HttpDelete("{userId}")]
@@ -322,6 +351,28 @@ namespace PostlyApi.Controllers
             _db.SaveChanges();
 
             return Ok();
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<UserDTO> GetCurrentUser()
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            var result = new UserDTO
+            {
+                Id = currentUser.Id,
+                Username = currentUser.Username,
+                DisplayName = currentUser.DisplayName
+            };
+
+            return Ok(result);
         }
 
         [HttpDelete("me")]
