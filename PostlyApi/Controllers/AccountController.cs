@@ -99,16 +99,38 @@ namespace PostlyApi.Controllers
             return new SuccessResult<object, RegisterError>(true, RegisterError.None);
         }
 
-        /*[HttpDelete("{userId}")]
+        [HttpDelete("{userId}")]
         [Authorize]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
-        public ActionResult DeleteAccount(long userId)
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult DeleteAccount([FromRoute] long userId)
         {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user doesn't have permission to delete this account:
+            if (!(currentUser == targetUser || currentUser.Role > 0))
+            {
+                return Forbid();
+            }
+
+            _db.Remove(targetUser);
+            _db.SaveChanges();
+
             return Ok();
-        }*/
+        }
 
         [HttpPut("{userId}/username")]
         [Authorize]
@@ -194,6 +216,45 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        [HttpPut("{userId}/role")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult UpdateRole([FromRoute] long userId, [FromBody] Role role)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user is not an admin:
+            if (currentUser.Role != Role.Admin)
+            {
+                return Forbid();
+            }
+
+            // if an admin tries to update themselves:
+            if (currentUser == targetUser)
+            {
+                return Ok();
+            }
+
+            targetUser.Role = role;
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+
         [HttpPut("{userId}/profile")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -258,6 +319,25 @@ namespace PostlyApi.Controllers
                 return BadRequest(errors);
             }
 
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("me")]
+        [Authorize]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult DeleteAccount()
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            _db.Remove(currentUser);
             _db.SaveChanges();
 
             return Ok();
