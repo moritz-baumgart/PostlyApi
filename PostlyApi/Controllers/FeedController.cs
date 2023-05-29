@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostlyApi.Enums;
 using PostlyApi.Models;
@@ -82,6 +83,60 @@ namespace PostlyApi.Controllers
                               CommentCount = p.Comments.Count,
                           });
             }
+        }
+
+        /// <summary>
+        /// Retrieves a list with the given maximum length, which contains posts by followed users that were posted between the from and to date. 
+        /// It is ordered from new to old. All timestamps should be provided in UTC.
+        /// </summary>
+        /// <param name="from">The "from" date, all retrieved posts will be older or equally old as this.</param>
+        /// <param name="to">The "to" date, all retrieved posts will be newer or equally new as this. Defaults to the current time.</param>
+        /// <param name="maxNumber">Maximum number of posts to retrieve.</param>
+        /// <returns>A list of <see cref="Models.DTOs.PostDTO"/>s according to the description.</returns>
+        [HttpGet("private")]
+        [Authorize]
+        public IEnumerable<PostDTO> GetPrivate([Required] DateTime from, DateTime? to, int maxNumber = 25)
+        {
+            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
+
+            if (user == null)
+            {
+                return new List<PostDTO>();
+            }
+
+            if (to == null)
+            {
+                to = DateTime.UtcNow;
+            }
+
+            _db.Entry(user).Collection(u => u.Following).Load();
+
+            var potentialAuthors = user.Following.Select(u => u.Id);
+
+            var result = _db.Posts
+                .Where(p => potentialAuthors.Contains(p.UserId) && p.CreatedAt >= from && p.CreatedAt <= to)
+                .Include(p => p.UpvotedBy)
+                .Include(p => p.DownvotedBy)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(maxNumber).Select(p => new PostDTO
+                {
+                    Id = p.Id,
+                    Content = p.Content,
+                    Author = new UserDTO
+                    {
+                        Id = p.Author.Id,
+                        Username = p.Author.Username,
+                        DisplayName = p.Author.DisplayName
+                    },
+                    CreatedAt = p.CreatedAt,
+                    UpvoteCount = p.UpvotedBy.Count,
+                    DownvoteCount = p.DownvotedBy.Count,
+                    CommentCount = p.Comments.Count,
+                    Vote = p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove,
+                    HasCommented = p.Comments.Any(c => c.Author == user)
+                });
+            
+            return result;
         }
     }
 }
