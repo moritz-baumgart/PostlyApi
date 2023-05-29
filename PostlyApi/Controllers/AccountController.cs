@@ -353,6 +353,130 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        [HttpGet("{userId}/followers")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<IEnumerable<UserDTO>> GetFollowers([FromRoute] long userId)
+        {
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            _db.Entry(targetUser).Collection(u => u.Follower).Load();
+
+            var result = targetUser.Follower.Select(u => new UserDTO()
+            {
+                Id = u.Id,
+                Username = u.Username,
+                DisplayName = u.DisplayName
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("{userId}/following")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<IEnumerable<UserDTO>> GetFollowing([FromRoute] long userId)
+        {
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            _db.Entry(targetUser).Collection(u => u.Following).Load();
+
+            var result = targetUser.Following.Select(u => new UserDTO()
+            {
+                Id = u.Id,
+                Username = u.Username,
+                DisplayName = u.DisplayName
+            });
+
+            return Ok(result);
+        }
+
+        [HttpPost("{sourceUserId}/following/{targetUserId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult FollowUser([FromRoute] long sourceUserId, long targetUserId)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var sourceUser = _db.Users.FirstOrDefault(u => u.Id == sourceUserId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            if (sourceUser == null || targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user doesn't have permission to initiate this follow:
+            if (!(currentUser == sourceUser || currentUser.Role == Role.Admin))
+            {
+                return Forbid();
+            }
+
+            // if the current user tries to follow themself:
+            if (sourceUser == targetUser)
+            {
+                return Ok();
+            }
+
+            // if the current user already follows the target:
+            _db.Entry(sourceUser).Collection(u => u.Following).Load();
+            if (sourceUser.Following.Any(u => u.Id == targetUserId))
+            {
+                return Ok();
+            }
+
+            sourceUser.Following.Add(targetUser);
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("{sourceUserId}/following/{targetUserId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult UnfollowUser([FromRoute] long sourceUserId, long targetUserId)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var sourceUser = _db.Users.FirstOrDefault(u => u.Id == sourceUserId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            if (sourceUser == null || targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user doesn't have permission to initiate this follow:
+            if (!(currentUser == sourceUser || currentUser.Role == Role.Admin))
+            {
+                return Forbid();
+            }
+
+            _db.Entry(sourceUser).Collection(u => u.Following).Load();
+            sourceUser.Following.Remove(targetUser);
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
         [HttpGet("me")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
@@ -506,6 +630,110 @@ namespace PostlyApi.Controllers
                 return BadRequest(errors);
             }
 
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpGet("me/followers")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<IEnumerable<UserDTO>> GetFollowers()
+        {
+            var targetUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            _db.Entry(targetUser).Collection(u => u.Follower).Load();
+
+            var result = targetUser.Follower.Select(u => new UserDTO()
+            {
+                Id = u.Id,
+                Username = u.Username,
+                DisplayName = u.DisplayName
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("me/following")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<IEnumerable<UserDTO>> GetFollowing()
+        {
+            var targetUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            _db.Entry(targetUser).Collection(u => u.Following).Load();
+
+            var result = targetUser.Following.Select(u => new UserDTO()
+            {
+                Id = u.Id,
+                Username = u.Username,
+                DisplayName = u.DisplayName
+            });
+
+            return Ok(result);
+        }
+
+        [HttpPost("me/following/{targetUserId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult FollowUser([FromRoute] long targetUserId)
+        {
+            var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            if (sourceUser == null || targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user tries to follow themself:
+            if (sourceUser == targetUser)
+            {
+                return Ok();
+            }
+
+            // if the current user already follows the target:
+            _db.Entry(sourceUser).Collection(u => u.Following).Load();
+            if (sourceUser.Following.Any(u => u.Id == targetUserId))
+            {
+                return Ok();
+            }
+
+            sourceUser.Following.Add(targetUser);
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("me/following/{targetUserId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult UnfollowUser([FromRoute] long targetUserId)
+        {
+            var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            if (sourceUser == null || targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            _db.Entry(sourceUser).Collection(u => u.Following).Load();
+            sourceUser.Following.Remove(targetUser);
             _db.SaveChanges();
 
             return Ok();
