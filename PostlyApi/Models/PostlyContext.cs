@@ -7,6 +7,7 @@ namespace PostlyApi.Models
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }  
+        public DbSet<Comment> Comments { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)
@@ -46,6 +47,14 @@ namespace PostlyApi.Models
                 .HasMany(p => p.DownvotedBy)
                 .WithMany(u => u.DownvotedPosts)
                 .UsingEntity(e => e.ToTable("Downvotes"));
+
+            // User 1 -- n Comment
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Author);
+
+            // Post 1 -- n Comment
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.CommentedPost);
         }
     }
 }

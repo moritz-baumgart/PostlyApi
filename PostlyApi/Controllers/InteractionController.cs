@@ -71,11 +71,11 @@ namespace PostlyApi.Controllers
         /// <summary>
         /// Adds the given comment text to the post with given id.
         /// </summary>
-        /// <param name="request">A <see cref="Models.Requests.CommentRequest"/>.</param>
+        /// <param name="request">A <see cref="Models.Requests.CommentCreateRequest"/>.</param>
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.CommentError.None"/> if the operation was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("comment")]
         [Authorize]
-        public SuccessResult<object, CommentError> Comment([FromBody] CommentRequest request)
+        public SuccessResult<object, CommentError> Comment([FromBody] CommentCreateRequest request)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 

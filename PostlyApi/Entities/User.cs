@@ -20,6 +20,7 @@ namespace PostlyApi.Entities
         public ICollection<Post> Posts { get; set; } = new List<Post>();
         public ICollection<Post> UpvotedPosts { get; set; } = new List<Post>();
         public ICollection<Post> DownvotedPosts { get; set; } = new List<Post>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
         /// <summary>
         /// Creates a new user with given username and password.

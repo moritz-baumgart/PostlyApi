@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PostlyApi.Models;
 
@@ -11,9 +12,11 @@ using PostlyApi.Models;
 namespace PostlyApi.Migrations
 {
     [DbContext(typeof(PostlyContext))]
-    partial class PostlyContextModelSnapshot : ModelSnapshot
+    [Migration("20230529112127_MakeDisplaynameNonNullable")]
+    partial class MakeDisplaynameNonNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,6 +63,9 @@ namespace PostlyApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -67,19 +73,16 @@ namespace PostlyApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PostId")
+                    b.Property<int?>("PostId")
                         .HasColumnType("int");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuthorId");
+
                     b.HasIndex("PostId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments");
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("PostlyApi.Entities.Post", b =>
@@ -200,21 +203,17 @@ namespace PostlyApi.Migrations
 
             modelBuilder.Entity("PostlyApi.Entities.Comment", b =>
                 {
-                    b.HasOne("PostlyApi.Entities.Post", "CommentedPost")
-                        .WithMany("Comments")
-                        .HasForeignKey("PostId")
+                    b.HasOne("PostlyApi.Entities.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PostlyApi.Entities.User", "Author")
+                    b.HasOne("PostlyApi.Entities.Post", null)
                         .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PostId");
 
                     b.Navigation("Author");
-
-                    b.Navigation("CommentedPost");
                 });
 
             modelBuilder.Entity("PostlyApi.Entities.Post", b =>
@@ -250,8 +249,6 @@ namespace PostlyApi.Migrations
 
             modelBuilder.Entity("PostlyApi.Entities.User", b =>
                 {
-                    b.Navigation("Comments");
-
                     b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618

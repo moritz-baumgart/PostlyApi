@@ -36,7 +36,7 @@ namespace PostlyApi.Controllers
         public SuccessResult<string, object> Login([FromBody] LoginOrRegisterRequest request)
         {
             // Query the database for the user
-            var user = _db.Users.FirstOrDefault(u => u.Username.Equals(request.Username));
+            var user = _db.Users.Single(u => u.Username.Equals(request.Username));
 
             // If the user exists continue
             if (user != null)
