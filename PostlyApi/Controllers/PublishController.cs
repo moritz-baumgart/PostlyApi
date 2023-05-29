@@ -26,6 +26,7 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.NewPostError.None"/> if the creation was successful, otherwise false, no value and a <see cref="Models.Errors.NewPostError"/>.</returns>
         [HttpPost("newpost")]
         [Authorize]
+        /* moved into PostController */
         public SuccessResult<object?, NewPostError> NewPost([FromBody] string content)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);

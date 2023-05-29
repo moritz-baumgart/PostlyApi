@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using PostlyApi.Entities;
+using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.Errors;
 using PostlyApi.Models.Requests;
@@ -36,7 +37,7 @@ namespace PostlyApi.Controllers
         public SuccessResult<string, object> Login([FromBody] LoginOrRegisterRequest request)
         {
             // Query the database for the user
-            var user = _db.Users.Single(u => u.Username.Equals(request.Username));
+            var user = _db.Users.FirstOrDefault(u => u.Username.Equals(request.Username));
 
             // If the user exists continue
             if (user != null)
@@ -86,7 +87,7 @@ namespace PostlyApi.Controllers
         public SuccessResult<object, RegisterError> Register([FromBody] LoginOrRegisterRequest request)
         {
             // Check if the user already exists, if so return error
-            if (_db.Users.Any(u => u.Username == request.Username))
+            if (_db.Users.Any(u => u.Username.Equals(request.Username)))
             {
                 return new SuccessResult<object, RegisterError>(false, RegisterError.UsernameAlreadyInUse);
             }
@@ -96,6 +97,287 @@ namespace PostlyApi.Controllers
             _db.SaveChanges();
 
             return new SuccessResult<object, RegisterError>(true, RegisterError.None);
+        }
+
+        /*[HttpDelete("{userId}")]
+        [Authorize]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
+        public ActionResult DeleteAccount(long userId)
+        {
+            return Ok();
+        }*/
+
+        [HttpPut("{userId}/username")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ChangeUsername([FromRoute] long userId, [FromBody] string newUsername)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the username is the same as before:
+            if (newUsername.Equals(targetUser.Username))
+            {
+                return Ok();
+            }
+
+            // if the current user doesn't have permission to change this username:
+            if (!(currentUser == targetUser || currentUser.Role > 0))
+            {
+                return Forbid();
+            }
+
+            // if the username is already taken:
+            if (_db.Users.Any(u => u.Username.Equals(newUsername)))
+            {
+                return BadRequest(Result.UsernameAlreadyInUse.ToString());
+            }
+
+            targetUser.Username = newUsername;
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("{userId}/password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ChangePassword([FromRoute] long userId, [FromBody] PasswordUpdateRequest request)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user doesn't have permission to change this password:
+            if (!(currentUser.Id == userId || currentUser.Role > 0))
+            {
+                return Forbid();
+            }
+
+            // if the old password was wrong:
+            if (!PasswordUtilities.VerifyPassword(request.OldPassword, targetUser.PasswordHash))
+            {
+                return BadRequest(Result.PasswordIncorrect.ToString());
+            }
+
+            targetUser.PasswordHash = PasswordUtilities.ComputePasswordHash(request.NewPassword);
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("{userId}/profile")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<ProfileUpdateError>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult UpdateProfile([FromRoute] long userId, ProfileUpdateRequest request)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Result.UserNotFound.ToString());
+            }
+
+            // if the current user doesn't have permission to change this profile:
+            if (!(currentUser.Id == userId || currentUser.Role > 0))
+            {
+                return Forbid();
+            }
+
+            List<ProfileUpdateError> errors = new();
+
+            if (request.DisplayName != null)
+            {
+                // TODO: validation
+                targetUser.DisplayName = request.DisplayName;
+            }
+
+            if (request.Email != null)
+            {
+                // TODO: validation
+                targetUser.Email = request.Email;
+            }
+
+            if (request.PhoneNumber != null)
+            {
+                // TODO: validation
+                targetUser.PhoneNumber = request.PhoneNumber;
+            }
+
+            if (request.Birthday != null)
+            {
+                // TODO: validation
+                targetUser.Birthday = request.Birthday;
+            }
+
+            if (request.Gender != null)
+            {
+                // TODO: validation
+                targetUser.Gender = request.Gender;
+            }
+
+            if (!errors.IsNullOrEmpty())
+            {
+                return BadRequest(errors);
+            }
+
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("me/username")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ChangeUsername([FromBody] string newUsername)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            // if the username is the same as before:
+            if (newUsername.Equals(currentUser.Username))
+            {
+                return Ok();
+            }
+
+            // if the username is already taken:
+            if (_db.Users.Any(u => u.Username.Equals(newUsername)))
+            {
+                return BadRequest(Result.UsernameAlreadyInUse.ToString());
+            }
+
+            currentUser.Username = newUsername;
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("me/password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ChangePassword([FromBody] PasswordUpdateRequest request)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            // if the old password was wrong:
+            if (!PasswordUtilities.VerifyPassword(request.OldPassword, currentUser.PasswordHash))
+            {
+                return BadRequest(Result.PasswordIncorrect.ToString());
+            }
+
+            currentUser.PasswordHash = PasswordUtilities.ComputePasswordHash(request.NewPassword);
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("me/profile")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<ProfileUpdateError>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult UpdateProfile(ProfileUpdateRequest request)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            List<ProfileUpdateError> errors = new();
+
+            if (request.DisplayName != null)
+            {
+                // TODO: validation
+                currentUser.DisplayName = request.DisplayName;
+            }
+
+            if (request.Email != null)
+            {
+                // TODO: validation
+                currentUser.Email = request.Email;
+            }
+
+            if (request.PhoneNumber != null)
+            {
+                // TODO: validation
+                currentUser.PhoneNumber = request.PhoneNumber;
+            }
+
+            if (request.Birthday != null)
+            {
+                // TODO: validation
+                currentUser.Birthday = request.Birthday;
+            }
+
+            if (request.Gender != null)
+            {
+                // TODO: validation
+                currentUser.Gender = request.Gender;
+            }
+
+            if (!errors.IsNullOrEmpty())
+            {
+                return BadRequest(errors);
+            }
+
+            _db.SaveChanges();
+
+            return Ok();
         }
 
         /// <summary>

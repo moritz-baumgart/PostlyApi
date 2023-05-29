@@ -29,6 +29,7 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the vote was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("vote")]
         [Authorize]
+        /* Moved to PostController */
         public SuccessResult<object, InteractionError> UpOrDownvote([FromBody] InteractionRequest request)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -39,7 +40,7 @@ namespace PostlyApi.Controllers
                 .Where(p => p.Id == request.PostId)
                 .Include(p => p.UpvotedBy)
                 .Include(p => p.DownvotedBy)
-                .Single();
+                .FirstOrDefault();
 
             if (post == null) { return new SuccessResult<object, InteractionError>(false, InteractionError.PostNotFound); }
 
@@ -75,13 +76,14 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.CommentError.None"/> if the operation was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
         [HttpPost("comment")]
         [Authorize]
+        /* Moved to PostController */
         public SuccessResult<object, CommentError> Comment([FromBody] CommentCreateRequest request)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
             if (user == null) { return new SuccessResult<object, CommentError>(true, CommentError.UserNotFound); }
 
-            var post = _db.Posts.Single(p => p.Id == request.PostId);
+            var post = _db.Posts.FirstOrDefault(p => p.Id == request.PostId);
             if (post == null) { return new SuccessResult<object, CommentError>(true, CommentError.PostNotFound); }
 
             post.Comments.Add(new Comment(user, post, request.CommentContent));
