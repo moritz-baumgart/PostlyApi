@@ -21,92 +21,61 @@ namespace PostlyApi.Controllers
         }
 
         /// <summary>
-        /// Retrieves a list with the given maximum length, which contains post that were posted between the from and to date. It is ordered from new to old. All timestamps should be provided in UTC.
+        /// Retrieves a page of posts.
         /// </summary>
-        /// <param name="from">The "from" date, all retrieved posts will be older or equally old as this.</param>
-        /// <param name="to">The "to" date, all retrieved posts will be newer or equally new as this. Defaults to the current time.</param>
-        /// <param name="maxNumber">Maximum number of posts to retrieve.</param>
-        /// <returns>A list of <see cref="Models.DTOs.PostDTO"/>s according to the discription.</returns>
+        /// <param name="paginationStart">The start date and time at which the pagination should start in UTC time.</param>
+        /// <param name="pageNumber">The page to retrieve.</param>
+        /// <param name="pageSize">The size of the page, defaults to 10.</param>
+        /// <returns>The page of posts as <see cref="IEnumerable{T}"/> of <see cref="Models.DTOs.PostDTO"/></returns>
         [HttpGet("public")]
-        public IEnumerable<PostDTO> GetPublic([Required] DateTime from, DateTime? to, int maxNumber = 25)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
+        public ActionResult<IEnumerable<PostDTO>> GetPublic([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
         {
-            if (to == null)
-            {
-                to = DateTime.UtcNow;
-            }
-
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
-            if (user != null)
-            {
-                return _db.Posts
-                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
-                          .Include(p => p.UpvotedBy)
-                          .Include(p => p.DownvotedBy)
-                          .OrderByDescending(p => p.CreatedAt)
-                          .Take(maxNumber).Select(p => new PostDTO
+            return Ok(_db.Posts
+                      .Where(p => p.CreatedAt <= paginationStart)
+                      .Include(p => p.UpvotedBy)
+                      .Include(p => p.DownvotedBy)
+                      .OrderByDescending(p => p.CreatedAt)
+                      .Skip(pageNumber * pageSize)
+                      .Take(pageSize).Select(p => new PostDTO
+                      {
+                          Id = p.Id,
+                          Content = p.Content,
+                          Author = new UserDTO
                           {
-                              Id = p.Id,
-                              Content = p.Content,
-                              Author = new UserDTO
-                              {
-                                  Id = p.Author.Id,
-                                  Username = p.Author.Username,
-                                  DisplayName = p.Author.DisplayName
-                              },
-                              CreatedAt = p.CreatedAt,
-                              UpvoteCount = p.UpvotedBy.Count,
-                              DownvoteCount = p.DownvotedBy.Count,
-                              CommentCount = p.Comments.Count,
-                              Vote = p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove,
-                              HasCommented = p.Comments.Any(c => c.Author == user)
-                          });
-            }
-            else
-            {
-                return _db.Posts
-                          .Where(p => p.CreatedAt >= from && p.CreatedAt <= to)
-                          .OrderByDescending(p => p.CreatedAt)
-                          .Take(maxNumber).Select(p => new PostDTO
-                          {
-                              Id = p.Id,
-                              Content = p.Content,
-                              Author = new UserDTO
-                              {
-                                  Id = p.Author.Id,
-                                  Username = p.Author.Username,
-                                  DisplayName = p.Author.DisplayName
-                              },
-                              CreatedAt = p.CreatedAt,
-                              UpvoteCount = p.UpvotedBy.Count,
-                              DownvoteCount = p.DownvotedBy.Count,
-                              CommentCount = p.Comments.Count,
-                          });
-            }
+                              Id = p.Author.Id,
+                              Username = p.Author.Username,
+                              DisplayName = p.Author.DisplayName
+                          },
+                          CreatedAt = p.CreatedAt.ToUniversalTime(),
+                          UpvoteCount = p.UpvotedBy.Count,
+                          DownvoteCount = p.DownvotedBy.Count,
+                          CommentCount = p.Comments.Count,
+                          Vote = user != null ? p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove : null,
+                          HasCommented = p.Comments.Any(c => c.Author == user)
+                      }));
         }
 
         /// <summary>
-        /// Retrieves a list with the given maximum length, which contains posts by followed users that were posted between the from and to date. 
-        /// It is ordered from new to old. All timestamps should be provided in UTC.
+        /// Retrieves a page of posts authored by users that the user the request was made by follows.
         /// </summary>
-        /// <param name="from">The "from" date, all retrieved posts will be older or equally old as this.</param>
-        /// <param name="to">The "to" date, all retrieved posts will be newer or equally new as this. Defaults to the current time.</param>
-        /// <param name="maxNumber">Maximum number of posts to retrieve.</param>
-        /// <returns>A list of <see cref="Models.DTOs.PostDTO"/>s according to the description.</returns>
+        /// <param name="paginationStart">The start date and time at which the pagination should start in UTC time.</param>
+        /// <param name="pageNumber">The page to retrieve.</param>
+        /// <param name="pageSize">The size of the page, defaults to 10.</param>
+        /// <returns>The page of posts as <see cref="IEnumerable{T}"/> of <see cref="Models.DTOs.PostDTO"/></returns>
         [HttpGet("private")]
         [Authorize]
-        public IEnumerable<PostDTO> GetPrivate([Required] DateTime from, DateTime? to, int maxNumber = 25)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult<IEnumerable<PostDTO>> GetPrivate([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
             if (user == null)
             {
-                return new List<PostDTO>();
-            }
-
-            if (to == null)
-            {
-                to = DateTime.UtcNow;
+                return Unauthorized();
             }
 
             _db.Entry(user).Collection(u => u.Following).Load();
@@ -114,11 +83,12 @@ namespace PostlyApi.Controllers
             var potentialAuthors = user.Following.Select(u => u.Id);
 
             var result = _db.Posts
-                .Where(p => potentialAuthors.Contains(p.UserId) && p.CreatedAt >= from && p.CreatedAt <= to)
+                .Where(p => potentialAuthors.Contains(p.UserId) && p.CreatedAt <= paginationStart)
                 .Include(p => p.UpvotedBy)
                 .Include(p => p.DownvotedBy)
                 .OrderByDescending(p => p.CreatedAt)
-                .Take(maxNumber).Select(p => new PostDTO
+                .Skip(pageNumber * pageSize)
+                .Take(pageSize).Select(p => new PostDTO
                 {
                     Id = p.Id,
                     Content = p.Content,
@@ -128,15 +98,15 @@ namespace PostlyApi.Controllers
                         Username = p.Author.Username,
                         DisplayName = p.Author.DisplayName
                     },
-                    CreatedAt = p.CreatedAt,
+                    CreatedAt = p.CreatedAt.ToUniversalTime(),
                     UpvoteCount = p.UpvotedBy.Count,
                     DownvoteCount = p.DownvotedBy.Count,
                     CommentCount = p.Comments.Count,
                     Vote = p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove,
                     HasCommented = p.Comments.Any(c => c.Author == user)
                 });
-            
-            return result;
+
+            return Ok(result);
         }
     }
 }
