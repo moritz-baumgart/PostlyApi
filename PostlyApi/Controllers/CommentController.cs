@@ -37,6 +37,8 @@ namespace PostlyApi.Controllers
 
             if (user == null) { return Unauthorized(); }
 
+            if (request.CommentContent.Length > 282) { return BadRequest(Error.CharacterLimitExceeded); }
+
             var post = _db.Posts.FirstOrDefault(p => p.Id == request.PostId);
             if (post == null) { return NotFound(Error.PostNotFound); }
 

@@ -7,6 +7,7 @@
         PostNotFound,
         CommentNotFound,
         UsernameAlreadyInUse,
+        CharacterLimitExceeded,
         InteractionAlreadyMade,
         InvalidEmail,
         InvalidPhoneNumber,

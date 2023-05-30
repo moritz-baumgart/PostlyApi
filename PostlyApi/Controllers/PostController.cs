@@ -28,11 +28,14 @@ namespace PostlyApi.Controllers
         [HttpPost]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> AddPost([FromBody] string content)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (user == null) { return Unauthorized(); }
+
+            if (content.Length > 282) { return BadRequest(Error.CharacterLimitExceeded); }
 
             var newPost = _db.Posts.Add(new Post(content, user, DateTime.UtcNow));
             _db.SaveChanges();
