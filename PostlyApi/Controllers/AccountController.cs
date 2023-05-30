@@ -5,7 +5,6 @@ using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
-using PostlyApi.Models.Errors;
 using PostlyApi.Models.Requests;
 using PostlyApi.Utilities;
 using System.IdentityModel.Tokens.Jwt;
@@ -32,50 +31,51 @@ namespace PostlyApi.Controllers
         /// </summary>
         /// <param name="username">The username of the user.</param>
         /// <param name="password">The user's password.</param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true and the jwt as string if the login was sucessful, otherwise false and no value is returned.</returns>
-
+        /// <returns>The JWT-Token on success, and a <see cref="Error"/> on failure</returns>
         [HttpPost("Login")]
-        public SuccessResult<string, object> Login([FromBody] LoginOrRegisterRequest request)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult Login([FromBody] LoginOrRegisterRequest request)
         {
             // Query the database for the user
             var user = _db.Users.FirstOrDefault(u => u.Username.Equals(request.Username));
 
-            // If the user exists continue
-            if (user != null)
+            // if user doesn't exist:
+            if (user == null)
             {
-
-                // If the password was correct, generate the jwt
-                if (PasswordUtilities.VerifyPassword(request.Password, user.PasswordHash))
-                {
-
-                    // Get our key from config
-                    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Secret"]));
-
-                    // specify the key and the algorithm to use
-                    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-                    // claims are "fields" in the jwt
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, user.Username),
-                        new Claim(ClaimTypes.Role, user.Role.ToString())
-                    };
-
-                    // generate a token using everything above and the issuer and audience from config
-                    var token = new JwtSecurityToken(
-                        _config["Jwt:Issuer"],
-                        _config["Jwt:Audience"],
-                        claims,
-                        expires: DateTime.UtcNow.AddDays(1),
-                        signingCredentials: credentials);
-
-                    // send token to client
-                    return new SuccessResult<string, object>(true, new JwtSecurityTokenHandler().WriteToken(token));
-                }
+                return NotFound(Error.UserNotFound);
             }
 
-            // Return error if something was not right above
-            return new SuccessResult<string, object>(false, "");
+            // if the password was incorrect:
+            if (!PasswordUtilities.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                return BadRequest(Error.PasswordIncorrect);
+            }
+
+            // Get our key from config
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Secret"]));
+
+            // specify the key and the algorithm to use
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            // claims are "fields" in the jwt
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
+
+            // generate a token using everything above and the issuer and audience from config
+            var token = new JwtSecurityToken(
+                _config["Jwt:Issuer"],
+                _config["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddDays(1),
+                signingCredentials: credentials);
+
+            // send token to client
+            return Ok(new JwtSecurityTokenHandler().WriteToken(token));
         }
 
         /// <summary>
@@ -83,14 +83,17 @@ namespace PostlyApi.Controllers
         /// </summary>
         /// <param name="username">The username of the user, has to be available.</param>
         /// <param name="password">The user's password.</param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true and no value if the registration was successful, otherwise false and a <see cref="Models.Errors.RegisterError"/>.</returns>
+        /// <returns>The id of the created user on success, a <see cref="Error"/> on failure</returns>
         [HttpPost("register")]
-        public SuccessResult<object, RegisterError> Register([FromBody] LoginOrRegisterRequest request)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(long))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult Register([FromBody] LoginOrRegisterRequest request)
         {
             // Check if the user already exists, if so return error
             if (_db.Users.Any(u => u.Username.Equals(request.Username)))
             {
-                return new SuccessResult<object, RegisterError>(false, RegisterError.UsernameAlreadyInUse);
+                return BadRequest(Error.UsernameAlreadyInUse);
             }
 
             // if the role parameter is null or the current user is not an admin, set role parameter of request to default
@@ -101,21 +104,21 @@ namespace PostlyApi.Controllers
             }
 
             // Otherwise add a new user and return success
-            _db.Users.Add(new User(request.Username, request.Password, (Role) request.Role));
+            var user = _db.Users.Add(new User(request.Username, request.Password, (Role) request.Role));
             _db.SaveChanges();
 
-            return new SuccessResult<object, RegisterError>(true, RegisterError.None);
+            return Ok(user.Entity.Id);
         }
 
         [HttpGet("{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<UserDTO> GetCurrentUser([FromRoute] long userId)
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult GetCurrentUser([FromRoute] long userId)
         {
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             var result = new UserDTO
@@ -130,11 +133,10 @@ namespace PostlyApi.Controllers
 
         [HttpDelete("{userId}")]
         [Authorize]
-        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult DeleteAccount([FromRoute] long userId)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -146,7 +148,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to delete this account:
@@ -167,7 +169,7 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult ChangeUsername([FromRoute] long userId, [FromBody] string newUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -179,7 +181,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             // if the username is the same as before:
@@ -197,7 +199,7 @@ namespace PostlyApi.Controllers
             // if the username is already taken:
             if (_db.Users.Any(u => u.Username.Equals(newUsername)))
             {
-                return BadRequest(Result.UsernameAlreadyInUse.ToString());
+                return BadRequest(Error.UsernameAlreadyInUse.ToString());
             }
 
             targetUser.Username = newUsername;
@@ -209,10 +211,10 @@ namespace PostlyApi.Controllers
         [HttpPut("{userId}/password")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult ChangePassword([FromRoute] long userId, [FromBody] PasswordUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -224,7 +226,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound.ToString());
             }
 
             // if the current user doesn't have permission to change this password:
@@ -236,7 +238,7 @@ namespace PostlyApi.Controllers
             // if the old password was wrong:
             if (!PasswordUtilities.VerifyPassword(request.OldPassword, targetUser.PasswordHash))
             {
-                return BadRequest(Result.PasswordIncorrect.ToString());
+                return BadRequest(Error.PasswordIncorrect);
             }
 
             targetUser.PasswordHash = PasswordUtilities.ComputePasswordHash(request.NewPassword);
@@ -245,52 +247,13 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
-        [HttpPut("{userId}/role")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult UpdateRole([FromRoute] long userId, [FromBody] Role role)
-        {
-            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
-            if (targetUser == null)
-            {
-                return NotFound(Result.UserNotFound.ToString());
-            }
-
-            // if the current user is not an admin:
-            if (currentUser.Role != Role.Admin)
-            {
-                return Forbid();
-            }
-
-            // if an admin tries to update themselves:
-            if (currentUser == targetUser)
-            {
-                return Ok();
-            }
-
-            targetUser.Role = role;
-            _db.SaveChanges();
-
-            return Ok();
-        }
-
-
         [HttpPut("{userId}/profile")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<ProfileUpdateError>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<Error>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult UpdateProfile([FromRoute] long userId, ProfileUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -302,7 +265,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to change this profile:
@@ -311,7 +274,7 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
-            List<ProfileUpdateError> errors = new();
+            List<Error> errors = new();
 
             if (request.DisplayName != null)
             {
@@ -353,15 +316,53 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        [HttpPut("{userId}/role")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult UpdateRole([FromRoute] long userId, [FromBody] Role role)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (targetUser == null)
+            {
+                return NotFound(Error.UserNotFound);
+            }
+
+            // if the current user is not an admin:
+            if (currentUser.Role != Role.Admin)
+            {
+                return Forbid();
+            }
+
+            // if an admin tries to update themselves:
+            if (currentUser == targetUser)
+            {
+                return Ok();
+            }
+
+            targetUser.Role = role;
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
         [HttpGet("{userId}/followers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<IEnumerable<UserDTO>> GetFollowers([FromRoute] long userId)
         {
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             _db.Entry(targetUser).Collection(u => u.Follower).Load();
@@ -378,13 +379,13 @@ namespace PostlyApi.Controllers
 
         [HttpGet("{userId}/following")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<IEnumerable<UserDTO>> GetFollowing([FromRoute] long userId)
         {
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             _db.Entry(targetUser).Collection(u => u.Following).Load();
@@ -403,7 +404,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult FollowUser([FromRoute] long sourceUserId, long targetUserId)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -416,7 +417,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
             if (sourceUser == null || targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to initiate this follow:
@@ -448,7 +449,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult UnfollowUser([FromRoute] long sourceUserId, long targetUserId)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -461,7 +462,7 @@ namespace PostlyApi.Controllers
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
             if (sourceUser == null || targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to initiate this follow:
@@ -480,13 +481,13 @@ namespace PostlyApi.Controllers
         [HttpGet("me")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<UserDTO> GetCurrentUser()
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
             {
-                return NotFound();
+                return Unauthorized();
             }
 
             var result = new UserDTO
@@ -500,7 +501,6 @@ namespace PostlyApi.Controllers
         }
 
         [HttpDelete("me")]
-        [Authorize]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -521,10 +521,8 @@ namespace PostlyApi.Controllers
         [HttpPut("me/username")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult ChangeUsername([FromBody] string newUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -542,7 +540,7 @@ namespace PostlyApi.Controllers
             // if the username is already taken:
             if (_db.Users.Any(u => u.Username.Equals(newUsername)))
             {
-                return BadRequest(Result.UsernameAlreadyInUse.ToString());
+                return BadRequest(Error.UsernameAlreadyInUse);
             }
 
             currentUser.Username = newUsername;
@@ -554,10 +552,8 @@ namespace PostlyApi.Controllers
         [HttpPut("me/password")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult ChangePassword([FromBody] PasswordUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -569,7 +565,7 @@ namespace PostlyApi.Controllers
             // if the old password was wrong:
             if (!PasswordUtilities.VerifyPassword(request.OldPassword, currentUser.PasswordHash))
             {
-                return BadRequest(Result.PasswordIncorrect.ToString());
+                return BadRequest(Error.PasswordIncorrect);
             }
 
             currentUser.PasswordHash = PasswordUtilities.ComputePasswordHash(request.NewPassword);
@@ -581,10 +577,8 @@ namespace PostlyApi.Controllers
         [HttpPut("me/profile")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<ProfileUpdateError>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<Error>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult UpdateProfile(ProfileUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -593,7 +587,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            List<ProfileUpdateError> errors = new();
+            List<Error> errors = new();
 
             if (request.DisplayName != null)
             {
@@ -639,13 +633,12 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<UserDTO>> GetFollowers()
         {
             var targetUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return Unauthorized();
             }
 
             _db.Entry(targetUser).Collection(u => u.Follower).Load();
@@ -664,13 +657,12 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<UserDTO>> GetFollowing()
         {
             var targetUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (targetUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return Unauthorized();
             }
 
             _db.Entry(targetUser).Collection(u => u.Following).Load();
@@ -689,14 +681,20 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult FollowUser([FromRoute] long targetUserId)
         {
             var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
-            if (sourceUser == null || targetUser == null)
+
+            if (sourceUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return Unauthorized();
+            }
+
+            if (targetUser == null)
+            {
+                return NotFound(Error.UserNotFound);
             }
 
             // if the current user tries to follow themself:
@@ -722,14 +720,20 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult UnfollowUser([FromRoute] long targetUserId)
         {
             var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
-            if (sourceUser == null || targetUser == null)
+
+            if (sourceUser == null)
             {
-                return NotFound(Result.UserNotFound.ToString());
+                return Unauthorized();
+            }
+
+            if (targetUser == null)
+            {
+                return NotFound(Error.UserNotFound);
             }
 
             _db.Entry(sourceUser).Collection(u => u.Following).Load();

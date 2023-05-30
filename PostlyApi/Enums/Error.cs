@@ -1,9 +1,7 @@
 ﻿namespace PostlyApi.Enums
 {
-    public enum Result
+    public enum Error
     {
-        Success,
-        InsufficientPermissions,
         PasswordIncorrect,
         UserNotFound,
         PostNotFound,

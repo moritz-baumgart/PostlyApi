@@ -5,8 +5,6 @@ using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
-using PostlyApi.Models.Errors;
-using PostlyApi.Models.Requests;
 using PostlyApi.Utilities;
 
 namespace PostlyApi.Controllers
@@ -30,7 +28,7 @@ namespace PostlyApi.Controllers
         [HttpPost]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> AddPost([FromBody] string content)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
@@ -48,7 +46,7 @@ namespace PostlyApi.Controllers
         /// <returns>The post as a <see cref="PostDTO"/></returns>
         [HttpGet("{postId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PostDTO))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<PostDTO> GetPost([FromRoute] long postId)
         {
             var post = _db.Posts
@@ -56,7 +54,7 @@ namespace PostlyApi.Controllers
                 .Include(p => p.Author)
                 .FirstOrDefault();
 
-            if (post == null) { return NotFound(Result.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
             var result = new PostDTO()
             {
@@ -85,13 +83,13 @@ namespace PostlyApi.Controllers
         [HttpDelete("{postId}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult DeletePost([FromRoute] int postId)
         {
             var post = _db.Posts.FirstOrDefault(p => p.Id == postId);
-            if (post == null) { return NotFound(Result.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (user == null) { return Unauthorized(); }
@@ -109,10 +107,10 @@ namespace PostlyApi.Controllers
         /// Retrieves the users who have upvoted a post with given post id
         /// </summary>
         /// <param name="postId">The post id of the targeted post</param>
-        /// <returns>A list of <see cref="UserDTO"/>s</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="UserDTO"/>s</returns>
         [HttpGet("{postId}/upvotes")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<IEnumerable<UserDTO>> GetUpvotes([FromRoute] long postId)
         {
             var post = _db.Posts
@@ -120,7 +118,7 @@ namespace PostlyApi.Controllers
                 .Include(p => p.UpvotedBy)
                 .FirstOrDefault();
 
-            if (post == null) { return NotFound(Result.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
             var result = post.UpvotedBy.Select(u => new UserDTO
             {
@@ -136,10 +134,10 @@ namespace PostlyApi.Controllers
         /// Retrieves the users who have downvoted a post with given post id
         /// </summary>
         /// <param name="postId">The post id of the targeted post</param>
-        /// <returns>A list of <see cref="UserDTO"/>s</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="UserDTO"/>s</returns>
         [HttpGet("{postId}/downvotes")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<IEnumerable<UserDTO>> Downvotes([FromRoute] long postId)
         {
             var post = _db.Posts
@@ -147,7 +145,7 @@ namespace PostlyApi.Controllers
                 .Include(p => p.DownvotedBy)
                 .FirstOrDefault();
 
-            if (post == null) { return NotFound(Result.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
             var result = post.DownvotedBy.Select(u => new UserDTO
             {
@@ -162,33 +160,38 @@ namespace PostlyApi.Controllers
         /// <summary>
         /// Adds the specified reaction to the post with given post id.
         /// </summary>
-        /// <param name="request">A <see cref="Models.Requests.InteractionRequest"/>.</param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.InteractionError.None"/> if the vote was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
+        /// <param name="postId">The post id of the targeted post</param>
+        /// <param name="vote">The type of vote that should be applied</param>
+        /// <returns>The <see cref="PostDTO"/> of the targeted post </returns>
         [HttpPost("{postId}/vote")]
         [Authorize]
-        public SuccessResult<object, InteractionError> UpOrDownvote([FromBody] InteractionRequest request)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PostDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult<PostDTO> UpOrDownvote([FromRoute] int postId, [FromBody] VoteInteractionType vote)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
-            if (user == null) { return new SuccessResult<object, InteractionError>(false, InteractionError.UserNotFound.ToString()); }
+            if (user == null) { return Unauthorized(); }
 
             var post = _db.Posts
-                .Where(p => p.Id == request.PostId)
+                .Where(p => p.Id == postId)
+                .Include(p => p.Author)
                 .Include(p => p.UpvotedBy)
                 .Include(p => p.DownvotedBy)
                 .FirstOrDefault();
 
-            if (post == null) { return new SuccessResult<object, InteractionError>(false, InteractionError.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
-            switch (request.Type)
+            switch (vote)
             {
                 case VoteInteractionType.Upvote:
-                    if (post.UpvotedBy.Contains(user)) { return new SuccessResult<object, InteractionError>(false, InteractionError.InteractionAlreadyMade.ToString()); }
+                    if (post.UpvotedBy.Contains(user))
                     post.UpvotedBy.Add(user);
                     post.DownvotedBy.Remove(user);
                     break;
                 case VoteInteractionType.Downvote:
-                    if (post.DownvotedBy.Contains(user)) { return new SuccessResult<object, InteractionError>(false, InteractionError.InteractionAlreadyMade.ToString()); }
+                    if (post.DownvotedBy.Contains(user))
                     post.DownvotedBy.Add(user);
                     post.UpvotedBy.Remove(user);
                     break;
@@ -200,7 +203,23 @@ namespace PostlyApi.Controllers
 
             _db.SaveChanges();
 
-            return new SuccessResult<object, InteractionError>(true, InteractionError.None.ToString());
+            var result = new PostDTO()
+            {
+                Id = post.Id,
+                Content = post.Content,
+                Author = new UserDTO
+                {
+                    Id = post.Author.Id,
+                    Username = post.Author.Username,
+                    DisplayName = post.Author.DisplayName
+                },
+                CreatedAt = post.CreatedAt,
+                UpvoteCount = post.UpvotedBy.Count,
+                DownvoteCount = post.DownvotedBy.Count,
+                CommentCount = post.Comments.Count
+            };
+
+            return Ok(result);
         }
 
 
@@ -211,7 +230,7 @@ namespace PostlyApi.Controllers
         /// <returns>Return status 200 with an <see cref="IEnumerable{T}"/> with <see cref="Entities.CommentDTO"/>s if successful. If the post was not found status 404.</returns>
         [HttpGet("{postId}/comments")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CommentDTO>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult<IEnumerable<CommentDTO>> Comments([FromRoute] long postId)
         {
             var post = _db.Posts
@@ -220,7 +239,7 @@ namespace PostlyApi.Controllers
                 .Where(p => p.Id == postId)
                 .FirstOrDefault();
 
-            if (post == null) { return NotFound(Result.PostNotFound.ToString()); }
+            if (post == null) { return NotFound(Error.PostNotFound); }
 
             var result = post.Comments
                     .Select(c => new CommentDTO
@@ -238,57 +257,6 @@ namespace PostlyApi.Controllers
                     );
 
             return Ok(result);
-        }
-
-        /// <summary>
-        /// Adds the given comment text to the post with given id.
-        /// </summary>
-        /// <param name="request">A <see cref="Models.Requests.CommentCreateRequest"/>.</param>
-        /// <returns>A <see cref="PostlyApi.Models.SuccessResult{T, E}"/> with true, no value and <see cref="Models.Errors.CommentError.None"/> if the operation was successful, otherwise false, no value and a <see cref="Models.Errors.InteractionError"/>.</returns>
-        [HttpPost("comment")]
-        [Authorize]
-        public SuccessResult<object, CommentError> Comment([FromBody] CommentCreateRequest request)
-        {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-
-            if (user == null) { return new SuccessResult<object, CommentError>(false, CommentError.UserNotFound.ToString()); }
-
-            var post = _db.Posts.FirstOrDefault(p => p.Id == request.PostId);
-            if (post == null) { return new SuccessResult<object, CommentError>(false, CommentError.PostNotFound.ToString()); }
-
-            post.Comments.Add(new Comment(user, post, request.CommentContent));
-            _db.SaveChanges();
-
-            return new SuccessResult<object, CommentError>(true, CommentError.None.ToString());
-        }
-
-        /// <summary>
-        /// Deletes the comment with a given comment id
-        /// </summary>
-        /// <param name="commentId">The id of the targeted comment</param>
-        /// <returns></returns>
-        [HttpDelete("comment/{commentId}")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteComment([FromRoute] int commentId)
-        {
-            var comment = _db.Comments.FirstOrDefault(c => c.Id == commentId);
-            if (comment == null) { return NotFound(Result.CommentNotFound.ToString()); }
-
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (user == null) { return Unauthorized(); }
-
-            // is user author of comment or has mod permission? If not, missing permission
-            // TODO: let author of post delete commments?
-            if (!(user.Id == comment.UserId || user.Role > 0)) { return Forbid(); }
-
-            _db.Comments.Remove(comment);
-            _db.SaveChanges();
-
-            return Ok();
         }
     }
 }

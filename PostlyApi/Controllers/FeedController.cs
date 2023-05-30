@@ -29,6 +29,7 @@ namespace PostlyApi.Controllers
         /// <returns>The page of posts as <see cref="IEnumerable{T}"/> of <see cref="Models.DTOs.PostDTO"/></returns>
         [HttpGet("public")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IEnumerable<PostDTO>> GetPublic([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
