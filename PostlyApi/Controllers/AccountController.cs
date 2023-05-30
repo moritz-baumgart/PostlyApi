@@ -34,7 +34,7 @@ namespace PostlyApi.Controllers
         /// <returns>The JWT-Token on success, and a <see cref="Error"/> on failure</returns>
         [HttpPost("Login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         public ActionResult Login([FromBody] LoginOrRegisterRequest request)
         {
@@ -50,7 +50,7 @@ namespace PostlyApi.Controllers
             // if the password was incorrect:
             if (!PasswordUtilities.VerifyPassword(request.Password, user.PasswordHash))
             {
-                return BadRequest(Error.PasswordIncorrect);
+                return Unauthorized(Error.PasswordIncorrect);
             }
 
             // Get our key from config
