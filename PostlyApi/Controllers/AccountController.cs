@@ -86,14 +86,13 @@ namespace PostlyApi.Controllers
         /// <returns>The id of the created user on success, a <see cref="Error"/> on failure</returns>
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(long))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Error))]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(Error))]
         public ActionResult Register([FromBody] LoginOrRegisterRequest request)
         {
             // Check if the user already exists, if so return error
             if (_db.Users.Any(u => u.Username.Equals(request.Username)))
             {
-                return BadRequest(Error.UsernameAlreadyInUse);
+                return Conflict(Error.UsernameAlreadyInUse);
             }
 
             // if the role parameter is null or the current user is not an admin, set role parameter of request to default
