@@ -1,4 +1,5 @@
 ﻿using PostlyApi.Entities;
+using PostlyApi.Enums;
 using PostlyApi.Models;
 using System.Security.Claims;
 
@@ -21,6 +22,29 @@ namespace PostlyApi.Utilities
             }
 
             return dbContext.Users.Where(u => u.Username == usernameClaim.Value).FirstOrDefault();
+        }
+
+        public static VoteInteractionType? GetVoteInteractionTypeOfUserForPost(User? user, Post post)
+        {
+            if (user == null)
+            {
+                return null;
+            }
+            else
+            {
+                if (post.UpvotedBy.Contains(user))
+                {
+                    return VoteInteractionType.Upvote;
+                }
+                else if (post.DownvotedBy.Contains(user))
+                {
+                    return VoteInteractionType.Downvote;
+                }
+                else
+                {
+                    return VoteInteractionType.Remove;
+                }
+            }
         }
     }
 }

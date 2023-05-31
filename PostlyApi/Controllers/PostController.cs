@@ -59,6 +59,8 @@ namespace PostlyApi.Controllers
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
+            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
+
             var result = new PostDTO()
             {
                 Id = post.Id,
@@ -72,7 +74,8 @@ namespace PostlyApi.Controllers
                 CreatedAt = post.CreatedAt,
                 UpvoteCount = post.UpvotedBy.Count,
                 DownvoteCount = post.DownvotedBy.Count,
-                CommentCount = post.Comments.Count
+                CommentCount = post.Comments.Count,
+                Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, post)
             };
 
             return Ok(result);
@@ -189,12 +192,10 @@ namespace PostlyApi.Controllers
             switch (vote)
             {
                 case VoteInteractionType.Upvote:
-                    if (post.UpvotedBy.Contains(user))
                     post.UpvotedBy.Add(user);
                     post.DownvotedBy.Remove(user);
                     break;
                 case VoteInteractionType.Downvote:
-                    if (post.DownvotedBy.Contains(user))
                     post.DownvotedBy.Add(user);
                     post.UpvotedBy.Remove(user);
                     break;
@@ -219,7 +220,8 @@ namespace PostlyApi.Controllers
                 CreatedAt = post.CreatedAt,
                 UpvoteCount = post.UpvotedBy.Count,
                 DownvoteCount = post.DownvotedBy.Count,
-                CommentCount = post.Comments.Count
+                CommentCount = post.Comments.Count,
+                Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, post)
             };
 
             return Ok(result);

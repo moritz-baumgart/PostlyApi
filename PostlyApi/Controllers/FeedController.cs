@@ -54,7 +54,7 @@ namespace PostlyApi.Controllers
                           UpvoteCount = p.UpvotedBy.Count,
                           DownvoteCount = p.DownvotedBy.Count,
                           CommentCount = p.Comments.Count,
-                          Vote = user != null ? p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove : null,
+                          Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, p),
                           HasCommented = p.Comments.Any(c => c.Author == user)
                       }));
         }
@@ -103,7 +103,7 @@ namespace PostlyApi.Controllers
                     UpvoteCount = p.UpvotedBy.Count,
                     DownvoteCount = p.DownvotedBy.Count,
                     CommentCount = p.Comments.Count,
-                    Vote = p.UpvotedBy.Contains(user) ? VoteInteractionType.Upvote : p.DownvotedBy.Contains(user) ? VoteInteractionType.Downvote : VoteInteractionType.Remove,
+                    Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, p),
                     HasCommented = p.Comments.Any(c => c.Author == user)
                 });
 
