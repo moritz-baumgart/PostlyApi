@@ -18,8 +18,7 @@ namespace PostlyApi.Entities
         public ICollection<User> Follower { get; set; } = new List<User>();
         public ICollection<User> Following { get; set; } = new List<User>();
         public ICollection<Post> Posts { get; set; } = new List<Post>();
-        public ICollection<Post> UpvotedPosts { get; set; } = new List<Post>();
-        public ICollection<Post> DownvotedPosts { get; set; } = new List<Post>();
+        public ICollection<Vote> Votes { get; set; } = new List<Vote>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
         /// <summary>

@@ -8,6 +8,7 @@ namespace PostlyApi.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }  
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Vote> Votes { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)
@@ -36,25 +37,8 @@ namespace PostlyApi.Models
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Upvotes n -- n User
-            modelBuilder.Entity<Post>()
-                .HasMany(p => p.UpvotedBy)
-                .WithMany(u => u.UpvotedPosts)
-                .UsingEntity(e => e.ToTable("Upvotes"));
-
-            // Downvotes n -- n User
-            modelBuilder.Entity<Post>()
-                .HasMany(p => p.DownvotedBy)
-                .WithMany(u => u.DownvotedPosts)
-                .UsingEntity(e => e.ToTable("Downvotes"));
-
-            // User 1 -- n Comment
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.Author);
-
-            // Post 1 -- n Comment
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.CommentedPost);
+            modelBuilder.Entity<Vote>()
+                .HasKey(v => new { v.UserId, v.PostId });
         }
     }
 }

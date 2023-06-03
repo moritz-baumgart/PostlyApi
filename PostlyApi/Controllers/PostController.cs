@@ -54,10 +54,13 @@ namespace PostlyApi.Controllers
         {
             var post = _db.Posts
                 .Where(p => p.Id == postId)
-                .Include(p => p.Author)
                 .FirstOrDefault();
 
             if (post == null) { return NotFound(Error.PostNotFound); }
+
+            _db.Entry(post).Reference(p => p.Author).Load();
+            _db.Entry(post).Collection(p => p.Votes).Load();
+            _db.Entry(post).Collection(p => p.Comments).Load();
 
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -72,10 +75,11 @@ namespace PostlyApi.Controllers
                     DisplayName = post.Author.DisplayName
                 },
                 CreatedAt = post.CreatedAt,
-                UpvoteCount = post.UpvotedBy.Count,
-                DownvoteCount = post.DownvotedBy.Count,
+                UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
+                DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                 CommentCount = post.Comments.Count,
-                Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, post)
+                Vote = DbUtilities.GetVoteTypeOfUserForPost(user, post),
+                HasCommented = DbUtilities.HasUserCommentedOnPost(user, post)
             };
 
             return Ok(result);
@@ -121,17 +125,23 @@ namespace PostlyApi.Controllers
         {
             var post = _db.Posts
                 .Where(p => p.Id == postId)
-                .Include(p => p.UpvotedBy)
                 .FirstOrDefault();
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
-            var result = post.UpvotedBy.Select(u => new UserDTO
-            {
-                Id = u.Id,
-                Username = u.Username,
-                DisplayName = u.DisplayName
-            });
+            _db.Entry(post).Collection(p => p.Votes).Load();
+
+            var result = _db.Votes
+                .Where(v => v.PostId == postId)
+                .Where(v => v.VoteType == VoteType.Upvote)
+                .Include(v => v.User)
+                .Select(v => v.User)
+                .Select(u => new UserDTO
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    DisplayName = u.DisplayName
+                });
 
             return Ok(result);
         }
@@ -148,17 +158,23 @@ namespace PostlyApi.Controllers
         {
             var post = _db.Posts
                 .Where(p => p.Id == postId)
-                .Include(p => p.DownvotedBy)
                 .FirstOrDefault();
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
-            var result = post.DownvotedBy.Select(u => new UserDTO
-            {
-                Id = u.Id,
-                Username = u.Username,
-                DisplayName = u.DisplayName
-            });
+            _db.Entry(post).Collection(p => p.Votes).Load();
+
+            var result = _db.Votes
+                .Where(v => v.PostId == postId)
+                .Where(v => v.VoteType == VoteType.Downvote)
+                .Include(v => v.User)
+                .Select(v => v.User)
+                .Select(u => new UserDTO
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    DisplayName = u.DisplayName
+                });
 
             return Ok(result);
         }
@@ -171,10 +187,10 @@ namespace PostlyApi.Controllers
         /// <returns>The <see cref="PostDTO"/> of the targeted post </returns>
         [HttpPost("{postId}/vote")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PostDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<PostDTO> UpOrDownvote([FromRoute] int postId, [FromBody] VoteInteractionType vote)
+        public ActionResult SetVote([FromRoute] int postId, [FromBody] VoteInteractionType vote)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -182,49 +198,49 @@ namespace PostlyApi.Controllers
 
             var post = _db.Posts
                 .Where(p => p.Id == postId)
-                .Include(p => p.Author)
-                .Include(p => p.UpvotedBy)
-                .Include(p => p.DownvotedBy)
                 .FirstOrDefault();
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
+            _db.Entry(post).Collection(p => p.Votes).Load();
+
+            var existingVote = post.Votes.Where(v => v.PostId == postId).FirstOrDefault();
+
             switch (vote)
             {
                 case VoteInteractionType.Upvote:
-                    post.UpvotedBy.Add(user);
-                    post.DownvotedBy.Remove(user);
+                    if (existingVote != null)
+                    {
+                        existingVote.VoteType = VoteType.Upvote;
+                        break;
+                    }
+                    post.Votes.Add(new Vote
+                    {
+                        User = user,
+                        VoteType = VoteType.Upvote,
+                    });
                     break;
                 case VoteInteractionType.Downvote:
-                    post.DownvotedBy.Add(user);
-                    post.UpvotedBy.Remove(user);
+                    if (existingVote != null)
+                    {
+                        existingVote.VoteType = VoteType.Downvote;
+                        break;
+                    }
+                    post.Votes.Add(new Vote
+                    {
+                        User = user,
+                        VoteType = VoteType.Downvote,
+                    });
                     break;
                 case VoteInteractionType.Remove:
-                    post.UpvotedBy.Remove(user);
-                    post.DownvotedBy.Remove(user);
+                    if (existingVote == null) break;
+                    post.Votes.Remove(existingVote);
                     break;
             }
 
             _db.SaveChanges();
 
-            var result = new PostDTO()
-            {
-                Id = post.Id,
-                Content = post.Content,
-                Author = new UserDTO
-                {
-                    Id = post.Author.Id,
-                    Username = post.Author.Username,
-                    DisplayName = post.Author.DisplayName
-                },
-                CreatedAt = post.CreatedAt,
-                UpvoteCount = post.UpvotedBy.Count,
-                DownvoteCount = post.DownvotedBy.Count,
-                CommentCount = post.Comments.Count,
-                Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, post)
-            };
-
-            return Ok(result);
+            return Ok();
         }
 
 

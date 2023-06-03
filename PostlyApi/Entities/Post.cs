@@ -1,6 +1,4 @@
-﻿using PostlyApi.Models.DTOs;
-
-namespace PostlyApi.Entities
+﻿namespace PostlyApi.Entities
 {
     public class Post
     {
@@ -9,8 +7,7 @@ namespace PostlyApi.Entities
         public long UserId { get; set; }
         public User Author { get; set; }
         public DateTime CreatedAt { get; set; }
-        public ICollection<User> UpvotedBy { get; set; } = new List<User>();
-        public ICollection<User> DownvotedBy { get; set; } = new List<User>();
+        public ICollection<Vote> Votes { get; set; } = new List<Vote>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
         /// <summary>
