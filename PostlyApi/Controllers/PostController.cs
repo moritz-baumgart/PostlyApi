@@ -204,7 +204,7 @@ namespace PostlyApi.Controllers
 
             _db.Entry(post).Collection(p => p.Votes).Load();
 
-            var existingVote = post.Votes.Where(v => v.PostId == postId).FirstOrDefault();
+            var existingVote = post.Votes.Where(v => v.PostId == postId && v.UserId == user.Id).FirstOrDefault();
 
             switch (vote)
             {
