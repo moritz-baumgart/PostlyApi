@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
@@ -36,8 +38,7 @@ namespace PostlyApi.Controllers
 
             return Ok(_db.Posts
                       .Where(p => p.CreatedAt <= paginationStart)
-                      .Include(p => p.UpvotedBy)
-                      .Include(p => p.DownvotedBy)
+                      .Include(p => p.Votes)
                       .OrderByDescending(p => p.CreatedAt)
                       .Skip(pageNumber * pageSize)
                       .Take(pageSize).Select(p => new PostDTO
@@ -51,10 +52,10 @@ namespace PostlyApi.Controllers
                               DisplayName = p.Author.DisplayName
                           },
                           CreatedAt = p.CreatedAt.ToUniversalTime(),
-                          UpvoteCount = p.UpvotedBy.Count,
-                          DownvoteCount = p.DownvotedBy.Count,
+                          UpvoteCount = p.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
+                          DownvoteCount = p.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                           CommentCount = p.Comments.Count,
-                          Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, p),
+                          Vote = DbUtilities.GetVoteTypeOfUserForPost(user, p),
                           HasCommented = p.Comments.Any(c => c.Author == user)
                       }));
         }
@@ -85,8 +86,7 @@ namespace PostlyApi.Controllers
 
             var result = _db.Posts
                 .Where(p => potentialAuthors.Contains(p.UserId) && p.CreatedAt <= paginationStart)
-                .Include(p => p.UpvotedBy)
-                .Include(p => p.DownvotedBy)
+                .Include(p => p.Votes)
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip(pageNumber * pageSize)
                 .Take(pageSize).Select(p => new PostDTO
@@ -100,10 +100,10 @@ namespace PostlyApi.Controllers
                         DisplayName = p.Author.DisplayName
                     },
                     CreatedAt = p.CreatedAt.ToUniversalTime(),
-                    UpvoteCount = p.UpvotedBy.Count,
-                    DownvoteCount = p.DownvotedBy.Count,
+                    UpvoteCount = p.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
+                    DownvoteCount = p.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                     CommentCount = p.Comments.Count,
-                    Vote = DbUtilities.GetVoteInteractionTypeOfUserForPost(user, p),
+                    Vote = DbUtilities.GetVoteTypeOfUserForPost(user, p),
                     HasCommented = p.Comments.Any(c => c.Author == user)
                 });
 

@@ -24,27 +24,24 @@ namespace PostlyApi.Utilities
             return dbContext.Users.Where(u => u.Username == usernameClaim.Value).FirstOrDefault();
         }
 
-        public static VoteInteractionType? GetVoteInteractionTypeOfUserForPost(User? user, Post post)
+        public static VoteType? GetVoteTypeOfUserForPost(User? user, Post post)
         {
-            if (user == null)
-            {
-                return null;
-            }
-            else
-            {
-                if (post.UpvotedBy.Contains(user))
-                {
-                    return VoteInteractionType.Upvote;
-                }
-                else if (post.DownvotedBy.Contains(user))
-                {
-                    return VoteInteractionType.Downvote;
-                }
-                else
-                {
-                    return VoteInteractionType.Remove;
-                }
-            }
+            if (user == null || post == null) return null;
+
+            var vote = post.Votes
+                .Where(v => v.UserId == user.Id)
+                .FirstOrDefault();
+
+            if (vote == null) return null;
+
+            return vote.VoteType;
+        }
+
+        public static bool HasUserCommentedOnPost(User? user, Post post)
+        {
+            if (user == null || post == null) return false;
+
+            return post.Comments.Any(c => c.UserId == user.Id);
         }
     }
 }
