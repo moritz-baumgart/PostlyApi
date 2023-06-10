@@ -39,6 +39,20 @@ namespace PostlyApi.Models
 
             modelBuilder.Entity<Vote>()
                 .HasKey(v => new { v.UserId, v.PostId });
+
+            // TODO : marked for removal:
+            // Upvotes n -- n User
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.UpvotedBy)
+                .WithMany(u => u.UpvotedPosts)
+                .UsingEntity(e => e.ToTable("Upvotes"));
+
+            // TODO : marked for removal:
+            // Downvotes n -- n User
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.DownvotedBy)
+                .WithMany(u => u.DownvotedPosts)
+                .UsingEntity(e => e.ToTable("Downvotes"));
         }
     }
 }

@@ -5,21 +5,28 @@ namespace PostlyApi.Entities
 {
     public class User
     {
-        public long Id { get; set; }
+        // public data: 
+        public long Id { get; set; } // unchangeable
+        public DateTime CreatedAt { get; set; } // unchangeable 
         public string Username { get; set; }
         public string DisplayName { get; set; }
+        public Role Role { get; set; }
+
+        // private data:
         public byte[] PasswordHash { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
         public DateTime? Birthday { get; set; }
-        public DateTime CreatedAt { get; set; }
         public Gender? Gender { get; set; }
-        public Role Role { get; set; }
-        public ICollection<User> Follower { get; set; } = new List<User>();
-        public ICollection<User> Following { get; set; } = new List<User>();
-        public ICollection<Post> Posts { get; set; } = new List<Post>();
-        public ICollection<Vote> Votes { get; set; } = new List<Vote>();
-        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // relations:
+        public ICollection<User> Follower { get; set; } = new List<User>(); // public
+        public ICollection<User> Following { get; set; } = new List<User>(); // public
+        public ICollection<Post> Posts { get; set; } = new List<Post>(); // public
+        public ICollection<Vote> Votes { get; set; } = new List<Vote>(); // private?
+        public ICollection<Post> UpvotedPosts { get; set; } = new List<Post>(); // TODO : marked for removal
+        public ICollection<Post> DownvotedPosts { get; set; } = new List<Post>(); // TODO : marked for removal
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>(); // public?
 
         /// <summary>
         /// Creates a new user with given username and password.
