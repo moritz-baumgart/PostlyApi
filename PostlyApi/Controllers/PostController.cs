@@ -58,29 +58,9 @@ namespace PostlyApi.Controllers
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
-            _db.Entry(post).Reference(p => p.Author).Load();
-            _db.Entry(post).Collection(p => p.Votes).Load();
-            _db.Entry(post).Collection(p => p.Comments).Load();
-
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
-            var result = new PostDTO()
-            {
-                Id = post.Id,
-                Content = post.Content,
-                Author = new UserDTO
-                {
-                    Id = post.Author.Id,
-                    Username = post.Author.Username,
-                    DisplayName = post.Author.DisplayName
-                },
-                CreatedAt = post.CreatedAt,
-                UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
-                DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
-                CommentCount = post.Comments.Count,
-                Vote = DbUtilities.GetVoteTypeOfUserForPost(user, post),
-                HasCommented = DbUtilities.HasUserCommentedOnPost(user, post)
-            };
+            var result = DbUtilities.GetPostDTO(post, _db);
 
             return Ok(result);
         }
@@ -132,16 +112,9 @@ namespace PostlyApi.Controllers
             _db.Entry(post).Collection(p => p.Votes).Load();
 
             var result = _db.Votes
-                .Where(v => v.PostId == postId)
-                .Where(v => v.VoteType == VoteType.Upvote)
+                .Where(v => v.PostId == postId && v.VoteType == VoteType.Upvote)
                 .Include(v => v.User)
-                .Select(v => v.User)
-                .Select(u => new UserDTO
-                {
-                    Id = u.Id,
-                    Username = u.Username,
-                    DisplayName = u.DisplayName
-                });
+                .Select(v => DbUtilities.GetUserDTO(v.User));
 
             return Ok(result);
         }
@@ -165,16 +138,9 @@ namespace PostlyApi.Controllers
             _db.Entry(post).Collection(p => p.Votes).Load();
 
             var result = _db.Votes
-                .Where(v => v.PostId == postId)
-                .Where(v => v.VoteType == VoteType.Downvote)
+                .Where(v => v.PostId == postId && v.VoteType == VoteType.Downvote)
                 .Include(v => v.User)
-                .Select(v => v.User)
-                .Select(u => new UserDTO
-                {
-                    Id = u.Id,
-                    Username = u.Username,
-                    DisplayName = u.DisplayName
-                });
+                .Select(v => DbUtilities.GetUserDTO(v.User));
 
             return Ok(result);
         }
@@ -262,20 +228,7 @@ namespace PostlyApi.Controllers
 
             if (post == null) { return NotFound(Error.PostNotFound); }
 
-            var result = post.Comments
-                    .Select(c => new CommentDTO
-                    {
-                        Id = c.Id,
-                        Author = new UserDTO
-                        {
-                            Id = c.Author.Id,
-                            Username = c.Author.Username,
-                            DisplayName = c.Author.DisplayName
-                        },
-                        Content = c.Content,
-                        CreatedAt = c.CreatedAt
-                    }
-                    );
+            var result = post.Comments.Select(c => DbUtilities.GetCommentDTO(c, _db));
 
             return Ok(result);
         }
