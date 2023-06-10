@@ -25,13 +25,13 @@ namespace PostlyApi.Controllers
         /// Adds the given comment text to the post with given id.
         /// </summary>
         /// <param name="request">A <see cref="CommentCreateRequest"/>.</param>
-        /// <returns></returns>
+        /// <returns>The number of comments under the post</returns>
         [HttpPost]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult Comment([FromBody] CommentCreateRequest request)
+        public ActionResult<int> Comment([FromBody] CommentCreateRequest request)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -45,24 +45,26 @@ namespace PostlyApi.Controllers
             post.Comments.Add(new Comment(user, post, request.CommentContent));
             _db.SaveChanges();
 
-            return Ok();
+            var commentCount = _db.Comments.Count();
+
+            return Ok(commentCount);
         }
 
         /// <summary>
         /// Deletes the comment with a given comment id
         /// </summary>
         /// <param name="commentId">The id of the targeted comment</param>
-        /// <returns></returns>
+        /// <returns>The number of comments under the post</returns>
         [HttpDelete("{commentId}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteComment([FromRoute] int commentId)
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult<int> DeleteComment([FromRoute] int commentId)
         {
             var comment = _db.Comments.FirstOrDefault(c => c.Id == commentId);
-            if (comment == null) { return NotFound(Error.CommentNotFound.ToString()); }
+            if (comment == null) { return NotFound(Error.CommentNotFound); }
 
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (user == null) { return Unauthorized(); }
@@ -74,7 +76,9 @@ namespace PostlyApi.Controllers
             _db.Comments.Remove(comment);
             _db.SaveChanges();
 
-            return Ok();
+            var commentCount = _db.Comments.Count();
+
+            return Ok(commentCount);
         }
     }
 }
