@@ -246,7 +246,23 @@ namespace PostlyApi.Controllers
 
             _db.SaveChanges();
 
-            return Ok();
+            var upvoteCount = post.Votes
+                .Where(p => p.VoteType == VoteType.Upvote)
+                .Count();
+
+            var downvoteCount = post.Votes
+                .Where(p => p.VoteType == VoteType.Downvote)
+                .Count();
+
+            var result = new VoteUpdateViewModel()
+            {
+                PostId = postId,
+                UserId = user.Id,
+                UpvoteCount = upvoteCount,
+                DownvoteCount = downvoteCount
+            };
+
+            return Ok(result);
         }
 
         /// <summary>
