@@ -29,14 +29,13 @@ namespace PostlyApi.Controllers
         [HttpGet("public")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed([Required] DateTime paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
             return Ok(_db.Posts
-                      .Where(p => p.CreatedAt <= paginationStart)
+                      .Where(p => p.CreatedAt < paginationStart)
                       .OrderByDescending(p => p.CreatedAt)
-                      .Skip(pageNumber * pageSize)
                       .Take(pageSize)
                       .ToList()
                       .Select(p => DbUtilities.GetPostDTO(p, _db)));
@@ -49,17 +48,16 @@ namespace PostlyApi.Controllers
         /// <param name="pageNumber">The page to retrieve.</param>
         /// <param name="pageSize">The size of the page, defaults to 10.</param>
         /// <returns>The page of posts as <see cref="IEnumerable{T}"/> of <see cref="Models.DTOs.PostDTO"/></returns>
-        [HttpGet("profile/{userId}")]
+        [HttpGet("profile/{username}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([FromRoute] long userId, [Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([FromRoute] string username, [Required] DateTime paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
             return Ok(_db.Posts
-                      .Where(p => p.CreatedAt <= paginationStart && p.Author.Id == userId)
+                      .Where(p => p.CreatedAt < paginationStart && p.Author.Username == username)
                       .OrderByDescending(p => p.CreatedAt)
-                      .Skip(pageNumber * pageSize)
                       .Take(pageSize)
                       .ToList()
                       .Select(p => DbUtilities.GetPostDTO(p, _db)));
@@ -76,7 +74,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([Required] DateTime paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -86,9 +84,8 @@ namespace PostlyApi.Controllers
             }
 
             return Ok(_db.Posts
-                      .Where(p => p.CreatedAt <= paginationStart && p.Author.Id == user.Id)
+                      .Where(p => p.CreatedAt < paginationStart && p.Author.Id == user.Id)
                       .OrderByDescending(p => p.CreatedAt)
-                      .Skip(pageNumber * pageSize)
                       .Take(pageSize)
                       .ToList()
                       .Select(p => DbUtilities.GetPostDTO(p, _db)));
@@ -105,7 +102,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed([Required] DateTime paginationStart, [Required] int pageNumber, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed([Required] DateTime paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -119,9 +116,8 @@ namespace PostlyApi.Controllers
             var potentialAuthors = user.Following.Select(u => u.Id);
 
             var result = _db.Posts
-                .Where(p => p.CreatedAt <= paginationStart && potentialAuthors.Contains(p.UserId))
+                .Where(p => p.CreatedAt < paginationStart && potentialAuthors.Contains(p.UserId))
                 .OrderByDescending(p => p.CreatedAt)
-                .Skip(pageNumber * pageSize)
                 .Take(pageSize)
                 .ToList()
                 .Select(p => DbUtilities.GetPostDTO(p, _db));
