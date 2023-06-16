@@ -102,20 +102,20 @@ namespace PostlyApi.Controllers
             }
 
             // Otherwise add a new user and return success
-            var user = _db.Users.Add(new User(request.Username, request.Password, (Role) request.Role));
+            var user = _db.Users.Add(new User(request.Username, request.Password, (Role)request.Role));
             _db.SaveChanges();
 
             return Ok(user.Entity.Id);
         }
         #endregion
 
-        #region {userId}
-        [HttpGet("{userId}")]
+        #region {username}
+        [HttpGet("{username}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDTO> GetUser([FromRoute] long userId)
+        public ActionResult<UserDTO> GetUser([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -126,13 +126,13 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{userId}")]
+        [HttpDelete("{username}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult DeleteUser([FromRoute] long userId)
+        public ActionResult DeleteUser([FromRoute] string username)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -140,7 +140,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -158,12 +158,12 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
-        [HttpGet("{userId}/profile")]
+        [HttpGet("{username}/profile")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserProfileViewModel> GetUserProfile([FromRoute] long userId)
+        public ActionResult<UserProfileViewModel> GetUserProfile([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -174,12 +174,12 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{userId}/data")]
+        [HttpGet("{username}/data")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> GetUserData([FromRoute] long userId)
+        public ActionResult<UserDataViewModel> GetUserData([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -190,14 +190,14 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{userId}/data")]
+        [HttpPut("{username}/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<Error>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> UpdateUserData([FromRoute] long userId, UserDataUpdateRequest request)
+        public ActionResult<UserDataViewModel> UpdateUserData([FromRoute] string username, UserDataUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -205,14 +205,14 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to change this profile:
-            if (!(currentUser.Id == userId || currentUser.Role == Role.Admin))
+            if (!(currentUser == targetUser || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
@@ -261,14 +261,14 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{userId}/username")]
+        [HttpPut("{username}/username")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> ChangeUsername([FromRoute] long userId, [FromBody] string newUsername)
+        public ActionResult<UserDataViewModel> ChangeUsername([FromRoute] string username, [FromBody] string newUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -276,7 +276,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -302,14 +302,14 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{userId}/password")]
+        [HttpPut("{username}/password")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(Error))]
-        public ActionResult ChangePassword([FromRoute] long userId, [FromBody] PasswordUpdateRequest request)
+        public ActionResult ChangePassword([FromRoute] string username, [FromBody] PasswordUpdateRequest request)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -317,14 +317,14 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
             }
 
             // if the current user doesn't have permission to change this password:
-            if (!(currentUser.Id == userId || currentUser.Role == Role.Admin))
+            if (!(currentUser.Username == username || currentUser.Role == Role.Admin))
             {
                 return Forbid();
             }
@@ -341,13 +341,13 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
-        [HttpPut("{userId}/role")]
+        [HttpPut("{username}/role")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> UpdateRole([FromRoute] long userId, [FromBody] Role role)
+        public ActionResult<UserDataViewModel> UpdateRole([FromRoute] string username, [FromBody] Role role)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -355,7 +355,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -375,12 +375,12 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{userId}/followers")]
+        [HttpGet("{username}/followers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<IEnumerable<UserDTO>> GetFollowers([FromRoute] long userId)
+        public ActionResult<IEnumerable<UserDTO>> GetFollowers([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -393,13 +393,13 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{userId}/followers/count")]
+        [HttpGet("{username}/followers/count")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<int> GetFollowerCount([FromRoute] long userId)
+        public ActionResult<int> GetFollowerCount([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return Unauthorized();
@@ -412,12 +412,12 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{userId}/following")]
+        [HttpGet("{username}/following")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<IEnumerable<UserDTO>> GetFollowing([FromRoute] long userId)
+        public ActionResult<IEnumerable<UserDTO>> GetFollowing([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -430,13 +430,13 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{userId}/following/count")]
+        [HttpGet("{username}/following/count")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<int> GetFollowingCount([FromRoute] long userId)
+        public ActionResult<int> GetFollowingCount([FromRoute] string username)
         {
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == userId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
             if (targetUser == null)
             {
                 return Unauthorized();
@@ -449,12 +449,12 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("{sourceUserId}/following/{targetUserId}")]
+        [HttpPost("{sourceUsername}/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserProfileViewModel> FollowUser([FromRoute] long sourceUserId, long targetUserId)
+        public ActionResult<UserProfileViewModel> FollowUser([FromRoute] string sourceUsername, string targetUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -462,8 +462,8 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var sourceUser = _db.Users.FirstOrDefault(u => u.Id == sourceUserId);
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            var sourceUser = _db.Users.FirstOrDefault(u => u.Username == sourceUsername);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == targetUsername);
             if (sourceUser == null || targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -475,7 +475,8 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
-            if (!(sourceUser == targetUser)) {
+            if (!(sourceUser == targetUser))
+            {
                 _db.Entry(sourceUser).Collection(u => u.Following).Load();
                 sourceUser.Following.Add(targetUser);
                 _db.SaveChanges();
@@ -486,12 +487,12 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{sourceUserId}/following/{targetUserId}")]
+        [HttpDelete("{sourceUsername}/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserProfileViewModel> UnfollowUser([FromRoute] long sourceUserId, long targetUserId)
+        public ActionResult<UserProfileViewModel> UnfollowUser([FromRoute] string sourceUsername, string targetUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -499,8 +500,8 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var sourceUser = _db.Users.FirstOrDefault(u => u.Id == sourceUserId);
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            var sourceUser = _db.Users.FirstOrDefault(u => u.Username == sourceUsername);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == targetUsername);
             if (sourceUser == null || targetUser == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -520,7 +521,7 @@ namespace PostlyApi.Controllers
 
             return Ok(result);
         }
-        #endregion {userId}
+        #endregion {username}
 
         #region me
         [HttpGet("me")]
@@ -783,15 +784,15 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("me/following/{targetUserId}")]
+        [HttpPost("me/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserProfileViewModel> FollowUser([FromRoute] long targetUserId)
+        public ActionResult<UserProfileViewModel> FollowUser([FromRoute] string targetUsername)
         {
             var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == targetUsername);
 
             if (sourceUser == null)
             {
@@ -815,15 +816,15 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("me/following/{targetUserId}")]
+        [HttpDelete("me/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserProfileViewModel> UnfollowUser([FromRoute] long targetUserId)
+        public ActionResult<UserProfileViewModel> UnfollowUser([FromRoute] string targetUsername)
         {
             var sourceUser = DbUtilities.GetUserFromContext(HttpContext, _db);
-            var targetUser = _db.Users.FirstOrDefault(u => u.Id == targetUserId);
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == targetUsername);
 
             if (sourceUser == null)
             {
