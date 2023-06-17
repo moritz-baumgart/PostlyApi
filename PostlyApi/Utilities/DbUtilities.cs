@@ -65,7 +65,7 @@ namespace PostlyApi.Utilities
             var result = new UserProfileViewModel
             {
                 Id = user.Id,
-                CreatedAt = user.CreatedAt,
+                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
                 Username =  user.Username,
                 DisplayName= user.DisplayName,
                 Role = user.Role,
@@ -81,7 +81,7 @@ namespace PostlyApi.Utilities
             var result = new UserDataViewModel
             {
                 Id = user.Id,
-                CreatedAt = user.CreatedAt,
+                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
                 Username = user.Username,
                 DisplayName = user.DisplayName,
                 Role = user.Role,
@@ -105,7 +105,7 @@ namespace PostlyApi.Utilities
                 Id = post.Id,
                 Content = post.Content,
                 Author = GetUserDTO(post.Author),
-                CreatedAt = post.CreatedAt,
+                CreatedAt = DateTime.SpecifyKind(post.CreatedAt, DateTimeKind.Utc),
                 UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
                 DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                 CommentCount = post.Comments.Count,
@@ -125,7 +125,7 @@ namespace PostlyApi.Utilities
                 Id = comment.Id,
                 Author = GetUserDTO(comment.Author),
                 Content = comment.Content,
-                CreatedAt = comment.CreatedAt
+                CreatedAt = DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc)
             };
 
             return result;
