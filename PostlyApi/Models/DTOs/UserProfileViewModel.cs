@@ -11,5 +11,7 @@ namespace PostlyApi.Models.DTOs
         public Role Role { get; set; }
         public int FollowerCount { get; set; }
         public int FollowingCount { get; set; }
+        public DateTime? Birthday { get; set; }
+        public Gender? Gender { get; set; }
     }
 }

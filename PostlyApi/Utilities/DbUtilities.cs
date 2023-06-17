@@ -71,6 +71,8 @@ namespace PostlyApi.Utilities
                 Role = user.Role,
                 FollowerCount = user.Follower.Count(),
                 FollowingCount = user.Following.Count(),
+                Birthday = user.Birthday,
+                Gender = user.Gender
             };
 
             return result;
