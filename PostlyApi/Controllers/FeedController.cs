@@ -38,7 +38,7 @@ namespace PostlyApi.Controllers
                       .OrderByDescending(p => p.CreatedAt)
                       .Take(pageSize)
                       .ToList()
-                      .Select(p => DbUtilities.GetPostDTO(p, _db)));
+                      .Select(p => DbUtilities.GetPostDTO(p, user, _db)));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace PostlyApi.Controllers
                       .OrderByDescending(p => p.CreatedAt)
                       .Take(pageSize)
                       .ToList()
-                      .Select(p => DbUtilities.GetPostDTO(p, _db)));
+                      .Select(p => DbUtilities.GetPostDTO(p, user, _db)));
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace PostlyApi.Controllers
                       .OrderByDescending(p => p.CreatedAt)
                       .Take(pageSize)
                       .ToList()
-                      .Select(p => DbUtilities.GetPostDTO(p, _db)));
+                      .Select(p => DbUtilities.GetPostDTO(p, user, _db)));
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace PostlyApi.Controllers
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(pageSize)
                 .ToList()
-                .Select(p => DbUtilities.GetPostDTO(p, _db));
+                .Select(p => DbUtilities.GetPostDTO(p, user, _db));
 
             return Ok(result);
         }

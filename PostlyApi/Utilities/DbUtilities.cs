@@ -96,7 +96,7 @@ namespace PostlyApi.Utilities
             return result;
         }
 
-        public static PostDTO GetPostDTO(Post post, PostlyContext _db)
+        public static PostDTO GetPostDTO(Post post, User? user, PostlyContext _db)
         {
             _db.Entry(post).Reference(p => p.Author).Load();
             _db.Entry(post).Collection(p => p.Votes).Load();
@@ -111,8 +111,8 @@ namespace PostlyApi.Utilities
                 UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
                 DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                 CommentCount = post.Comments.Count,
-                Vote = GetVoteTypeOfUserForPost(post.Author, post),
-                HasCommented = HasUserCommentedOnPost(post.Author, post)
+                Vote = GetVoteTypeOfUserForPost(user, post),
+                HasCommented = HasUserCommentedOnPost(user, post)
             };
 
             return result;

@@ -60,7 +60,7 @@ namespace PostlyApi.Controllers
 
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
-            var result = DbUtilities.GetPostDTO(post, _db);
+            var result = DbUtilities.GetPostDTO(post, user, _db);
 
             return Ok(result);
         }
