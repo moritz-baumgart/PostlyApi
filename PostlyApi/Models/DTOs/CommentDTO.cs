@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public UserDTO Author { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public string Content { get; set; }
     }
 }

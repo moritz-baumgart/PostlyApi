@@ -7,17 +7,18 @@ namespace PostlyApi.Entities
     {
         // public data: 
         public long Id { get; set; } // unchangeable
-        public DateTime CreatedAt { get; set; } // unchangeable 
+        public DateTimeOffset CreatedAt { get; set; } // unchangeable 
         public string Username { get; set; }
-        public string DisplayName { get; set; }
+        public string? DisplayName { get; set; }
         public Role Role { get; set; }
+        public DateTimeOffset? Birthday { get; set; }
+        public Gender? Gender { get; set; }
 
         // private data:
         public byte[] PasswordHash { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
-        public DateTime? Birthday { get; set; }
-        public Gender? Gender { get; set; }
+
 
         // relations:
         public ICollection<User> Follower { get; set; } = new List<User>(); // public
@@ -49,7 +50,7 @@ namespace PostlyApi.Entities
             DisplayName = username;
             PasswordHash = passwordHash;
             Role = role;
-            CreatedAt = DateTime.UtcNow;
+            CreatedAt = DateTimeOffset.UtcNow;
         }
     }
 

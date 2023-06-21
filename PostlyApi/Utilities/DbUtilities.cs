@@ -65,9 +65,9 @@ namespace PostlyApi.Utilities
             var result = new UserProfileViewModel
             {
                 Id = user.Id,
-                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
-                Username =  user.Username,
-                DisplayName= user.DisplayName,
+                CreatedAt = user.CreatedAt,
+                Username = user.Username,
+                DisplayName = user.DisplayName,
                 Role = user.Role,
                 FollowerCount = user.Follower.Count(),
                 FollowingCount = user.Following.Count(),
@@ -83,7 +83,7 @@ namespace PostlyApi.Utilities
             var result = new UserDataViewModel
             {
                 Id = user.Id,
-                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
+                CreatedAt = user.CreatedAt,
                 Username = user.Username,
                 DisplayName = user.DisplayName,
                 Role = user.Role,
@@ -107,7 +107,7 @@ namespace PostlyApi.Utilities
                 Id = post.Id,
                 Content = post.Content,
                 Author = GetUserDTO(post.Author),
-                CreatedAt = DateTime.SpecifyKind(post.CreatedAt, DateTimeKind.Utc),
+                CreatedAt = post.CreatedAt,
                 UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
                 DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                 CommentCount = post.Comments.Count,
@@ -127,10 +127,21 @@ namespace PostlyApi.Utilities
                 Id = comment.Id,
                 Author = GetUserDTO(comment.Author),
                 Content = comment.Content,
-                CreatedAt = DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc)
+                CreatedAt = comment.CreatedAt
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// Checks if a username is already in use already exists in the given context.
+        /// </summary>
+        /// <param name="dbContext"></param>
+        /// <param name="username"></param>
+        /// <returns>True if the user already exists, false otherwise.</returns>
+        public static bool IsUsernameAlreadyInUser(PostlyContext dbContext, string username)
+        {
+            return dbContext.Users.Any(u => u.Username.Equals(username));
         }
     }
 }

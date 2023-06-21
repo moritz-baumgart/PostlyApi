@@ -89,7 +89,7 @@ namespace PostlyApi.Controllers
         public ActionResult Register([FromBody] LoginOrRegisterRequest request)
         {
             // Check if the user already exists, if so return error
-            if (_db.Users.Any(u => u.Username.Equals(request.Username)))
+            if (DbUtilities.IsUsernameAlreadyInUser(_db, request.Username))
             {
                 return Conflict(Error.UsernameAlreadyInUse);
             }
@@ -190,7 +190,7 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{username}/data")]
+        [HttpPatch("{username}/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<Error>))]
@@ -217,42 +217,12 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
-            List<Error> errors = new();
-
-            if (request.DisplayName != null)
-            {
-                // TODO: validation
-                targetUser.DisplayName = request.DisplayName;
-            }
-
-            if (request.Email != null)
-            {
-                // TODO: validation
-                targetUser.Email = request.Email;
-            }
-
-            if (request.PhoneNumber != null)
-            {
-                // TODO: validation
-                targetUser.PhoneNumber = request.PhoneNumber;
-            }
-
-            if (request.Birthday != null)
-            {
-                // TODO: validation
-                targetUser.Birthday = request.Birthday;
-            }
-
-            if (request.Gender != null)
-            {
-                // TODO: validation
-                targetUser.Gender = request.Gender;
-            }
-
-            if (!errors.IsNullOrEmpty())
+            if (!request.IsValid(out var errors))
             {
                 return Conflict(errors);
             }
+
+            request.UpdateUser(targetUser);
 
             _db.SaveChanges();
 
@@ -263,12 +233,12 @@ namespace PostlyApi.Controllers
 
         [HttpPut("{username}/username")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
         [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> ChangeUsername([FromRoute] string username, [FromBody] string newUsername)
+        public ActionResult ChangeUsername([FromRoute] string username, [FromBody] string newUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -289,7 +259,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the username is already taken by someone else:
-            if (_db.Users.Any(u => u.Username.Equals(newUsername)) && !newUsername.Equals(targetUser.Username))
+            if (DbUtilities.IsUsernameAlreadyInUser(_db, newUsername) && !newUsername.Equals(targetUser.Username))
             {
                 return Conflict(Error.UsernameAlreadyInUse);
             }
@@ -297,9 +267,7 @@ namespace PostlyApi.Controllers
             targetUser.Username = newUsername;
             _db.SaveChanges();
 
-            var result = DbUtilities.GetUserData(targetUser);
-
-            return Ok(result);
+            return Ok();
         }
 
         [HttpPut("{username}/password")]
@@ -593,7 +561,7 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("me/data")]
+        [HttpPatch("me/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(IEnumerable<Error>))]
@@ -606,42 +574,12 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            List<Error> errors = new();
-
-            if (request.DisplayName != null)
-            {
-                // TODO: validation
-                currentUser.DisplayName = request.DisplayName;
-            }
-
-            if (request.Email != null)
-            {
-                // TODO: validation
-                currentUser.Email = request.Email;
-            }
-
-            if (request.PhoneNumber != null)
-            {
-                // TODO: validation
-                currentUser.PhoneNumber = request.PhoneNumber;
-            }
-
-            if (request.Birthday != null)
-            {
-                // TODO: validation
-                currentUser.Birthday = request.Birthday;
-            }
-
-            if (request.Gender != null)
-            {
-                // TODO: validation
-                currentUser.Gender = request.Gender;
-            }
-
-            if (!errors.IsNullOrEmpty())
+            if (!request.IsValid(out var errors))
             {
                 return BadRequest(errors);
             }
+
+            request.UpdateUser(currentUser);
 
             _db.SaveChanges();
 
@@ -652,10 +590,10 @@ namespace PostlyApi.Controllers
 
         [HttpPut("me/username")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> ChangeUsername([FromBody] string newUsername)
+        public ActionResult ChangeUsername([FromBody] string newUsername)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -670,7 +608,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the username is already taken:
-            if (_db.Users.Any(u => u.Username.Equals(newUsername)))
+            if (DbUtilities.IsUsernameAlreadyInUser(_db, newUsername))
             {
                 return Conflict(Error.UsernameAlreadyInUse);
             }
@@ -678,9 +616,7 @@ namespace PostlyApi.Controllers
             currentUser.Username = newUsername;
             _db.SaveChanges();
 
-            var result = DbUtilities.GetUserData(currentUser);
-
-            return Ok(result);
+            return Ok();
         }
 
         [HttpPut("me/password")]

@@ -37,7 +37,7 @@ namespace PostlyApi.Controllers
 
             if (content.Length > 282) { return BadRequest(Error.CharacterLimitExceeded); }
 
-            var newPost = _db.Posts.Add(new Post(content, user, DateTime.UtcNow));
+            var newPost = _db.Posts.Add(new Post(content, user, DateTimeOffset.Now));
             _db.SaveChanges();
             return Ok(newPost.Entity.Id);
         }

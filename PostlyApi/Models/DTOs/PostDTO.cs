@@ -7,7 +7,7 @@ namespace PostlyApi.Models.DTOs
         public int Id { get; set; }
         public string Content { get; set; }
         public UserDTO Author { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public int UpvoteCount { get; set; }
         public int DownvoteCount { get; set; }
         public int CommentCount { get; set; }

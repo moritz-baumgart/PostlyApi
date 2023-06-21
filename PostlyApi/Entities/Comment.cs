@@ -9,7 +9,7 @@ namespace PostlyApi.Entities
         public User Author { get; set; }
         public int PostId { get; set; }
         public Post CommentedPost { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public string Content { get; set; }
 
         /// <summary>
@@ -20,9 +20,9 @@ namespace PostlyApi.Entities
         }
 
         public Comment(User author, Post post, string content)
-            : this(author, post, content, DateTime.UtcNow) { }
+            : this(author, post, content, DateTimeOffset.UtcNow) { }
 
-        public Comment(User author, Post post, string content, DateTime createdAt)
+        public Comment(User author, Post post, string content, DateTimeOffset createdAt)
         {
             Author = author;
             CommentedPost = post;

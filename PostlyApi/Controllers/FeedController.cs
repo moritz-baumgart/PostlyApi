@@ -29,7 +29,7 @@ namespace PostlyApi.Controllers
         [HttpGet("public")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed([Required] DateTime paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -51,7 +51,7 @@ namespace PostlyApi.Controllers
         [HttpGet("profile/{username}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([FromRoute] string username, [Required] DateTime paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([FromRoute] string username, [Required] DateTimeOffset paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -74,7 +74,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([Required] DateTime paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -102,7 +102,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed([Required] DateTime paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 

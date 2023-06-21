@@ -6,7 +6,7 @@
         public string Content { get; set; }
         public long UserId { get; set; }
         public User Author { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public ICollection<Vote> Votes { get; set; } = new List<Vote>();
         public ICollection<User> UpvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
         public ICollection<User> DownvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
@@ -19,7 +19,7 @@
         {
         }
 
-        public Post(string content, User author, DateTime createdAt)
+        public Post(string content, User author, DateTimeOffset createdAt)
         {
             Content = content;
             Author = author;
