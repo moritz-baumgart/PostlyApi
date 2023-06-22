@@ -149,16 +149,28 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> GetLoginsTotal()
         {
-            return Ok();
+            var result = _db.Logins.Count();
+
+            return Ok(result);
         }
 
         [HttpGet("login/perday")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountOnDateModel>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<CountOnDateModel>> GetLoginsPerDay([FromQuery] DateTimeOffset? start, DateTimeOffset? end)
+        public ActionResult<IEnumerable<CountOnDateModel>> GetLoginsPerDay(
+            [FromQuery] DateTimeOffset? start,
+            [FromQuery] DateTimeOffset? end)
         {
-            return Ok();
+            var endDate = (end == null) ? DateTimeOffset.UtcNow.Date : end.Value.Date;
+            var startDate = (start == null) ? endDate.AddMonths(-1) : start.Value.Date;
+
+            var result = _db.Logins
+                .Where(_ => _.CreatedAt.Date >= startDate && _.CreatedAt.Date <= endDate)
+                .GroupBy(_ => _.CreatedAt.Date)
+                .Select(g => new CountOnDateModel { Date = g.Key, Count = g.Count() });
+
+            return Ok(result);
         }
 
         #endregion
