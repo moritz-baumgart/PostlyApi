@@ -53,6 +53,14 @@ namespace PostlyApi.Controllers
                 return Unauthorized(Error.PasswordIncorrect);
             }
 
+            // Record the login in the database
+            _db.Logins.Add(new Login
+            {
+                CreatedAt = DateTimeOffset.UtcNow,
+                UserId = user.Id,
+            });
+            _db.SaveChanges();
+
             // Get our key from config
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Secret"]));
 
