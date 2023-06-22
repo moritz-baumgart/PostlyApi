@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PostlyApi.Enums;
 using PostlyApi.Models;
-using PostlyApi.Models.Statistics;
 
 namespace PostlyApi.Controllers
 {
@@ -32,9 +31,9 @@ namespace PostlyApi.Controllers
 
         [HttpGet("user/perday")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountOnDateModel>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<CountOnDateModel>> GetUsersPerDay(
+        public ActionResult<IDictionary<DateTime, int>> GetUsersPerDay(
             [FromQuery] DateTimeOffset? start,
             [FromQuery] DateTimeOffset? end)
         {
@@ -44,25 +43,24 @@ namespace PostlyApi.Controllers
             var result = _db.Users
                 .Where(_ => _.CreatedAt.Date >= startDate && _.CreatedAt.Date <= endDate)
                 .GroupBy(_ => _.CreatedAt.Date)
-                .Select(g => new CountOnDateModel { Date = g.Key, Count = g.Count() });
+                .ToDictionary(g => g.Key, g => g.Count());
 
             return Ok(result);
         }
 
         [HttpGet("user/gender")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<GenderCountModel>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<Gender, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult GetGenderCounts()
+        public ActionResult<IDictionary<Gender, int>> GetGenderCounts()
         {
-            var result = new List<GenderCountModel>();
+            var result = new Dictionary<Gender, int>();
+                
 
             foreach (var gender in (Gender[])Enum.GetValues(typeof(Gender)))
             {
-                result.Add(new GenderCountModel {
-                    Gender = gender,
-                    Count = _db.Users.Where(_ => _.Gender == gender).Count()
-                });
+                result.Add(gender, _db.Users.Where(_ => _.Gender == gender).Count()
+                );
             };
 
             return Ok(result);
@@ -86,9 +84,9 @@ namespace PostlyApi.Controllers
 
         [HttpGet("post/perday")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountOnDateModel>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<CountOnDateModel>> GetPostsPerDay(
+        public ActionResult<IDictionary<DateTime, int>> GetPostsPerDay(
             [FromQuery] DateTimeOffset? start,
             [FromQuery] DateTimeOffset? end)
         {
@@ -98,7 +96,7 @@ namespace PostlyApi.Controllers
             var result = _db.Posts
                 .Where(_ => _.CreatedAt.Date >= startDate && _.CreatedAt.Date <= endDate)
                 .GroupBy(_ => _.CreatedAt.Date)
-                .Select(g => new CountOnDateModel { Date = g.Key, Count = g.Count() });
+                .ToDictionary(g => g.Key, g => g.Count());
 
             return Ok(result);
         }
@@ -121,9 +119,9 @@ namespace PostlyApi.Controllers
 
         [HttpGet("comment/perday")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountOnDateModel>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<CountOnDateModel>> GetCommentsPerDay(
+        public ActionResult<IDictionary<DateTime, int>> GetCommentsPerDay(
             [FromQuery] DateTimeOffset? start, 
             [FromQuery] DateTimeOffset? end)
         {
@@ -133,7 +131,7 @@ namespace PostlyApi.Controllers
             var result = _db.Comments
                 .Where(_ => _.CreatedAt.Date >= startDate && _.CreatedAt.Date <= endDate)
                 .GroupBy(_ => _.CreatedAt.Date)
-                .Select(g => new CountOnDateModel { Date = g.Key, Count = g.Count() });
+                .ToDictionary(g => g.Key, g => g.Count());
 
             return Ok(result);
         }
@@ -154,9 +152,9 @@ namespace PostlyApi.Controllers
 
         [HttpGet("login/perday")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountOnDateModel>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<CountOnDateModel>> GetLoginsPerDay([FromQuery] DateTimeOffset? start, DateTimeOffset? end)
+        public ActionResult<IDictionary<DateTime, int>> GetLoginsPerDay([FromQuery] DateTimeOffset? start, DateTimeOffset? end)
         {
             return Ok();
         }
