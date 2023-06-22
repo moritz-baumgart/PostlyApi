@@ -9,6 +9,7 @@ namespace PostlyApi.Models
         public DbSet<Post> Posts { get; set; }  
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Vote> Votes { get; set; }
+        public DbSet<Login> Logins { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)
@@ -39,6 +40,9 @@ namespace PostlyApi.Models
 
             modelBuilder.Entity<Vote>()
                 .HasKey(v => new { v.UserId, v.PostId });
+
+            modelBuilder.Entity<Login>()
+                .HasKey(l => new { l.CreatedAt, l.UserId });
 
             // TODO : marked for removal:
             // Upvotes n -- n User
