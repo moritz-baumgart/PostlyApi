@@ -54,14 +54,9 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IDictionary<Gender, int>> GetGenderCounts()
         {
-            var result = new Dictionary<Gender, int>();
-                
-
-            foreach (var gender in (Gender[])Enum.GetValues(typeof(Gender)))
-            {
-                result.Add(gender, _db.Users.Where(_ => _.Gender == gender).Count()
-                );
-            };
+            var result = _db.Users
+                .GroupBy(_ => _.Gender ?? Gender.NoAnswer)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             return Ok(result);
         }
