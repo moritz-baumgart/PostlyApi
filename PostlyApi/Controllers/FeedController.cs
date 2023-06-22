@@ -29,9 +29,13 @@ namespace PostlyApi.Controllers
         [HttpGet("public")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPublicFeed(
+            [FromQuery] DateTimeOffset? paginationStart,
+            [FromQuery] int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
+
+            if (paginationStart == null) paginationStart = DateTimeOffset.UtcNow;
 
             return Ok(_db.Posts
                       .Where(p => p.CreatedAt < paginationStart)
@@ -51,9 +55,14 @@ namespace PostlyApi.Controllers
         [HttpGet("profile/{username}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([FromRoute] string username, [Required] DateTimeOffset paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed(
+            [FromRoute] string username, 
+            [FromQuery] DateTimeOffset? paginationStart,
+            [FromQuery] int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
+
+            if (paginationStart == null) paginationStart = DateTimeOffset.UtcNow;
 
             return Ok(_db.Posts
                       .Where(p => p.CreatedAt < paginationStart && p.Author.Username == username)
@@ -74,7 +83,9 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetProfileFeed(
+            [FromQuery] DateTimeOffset? paginationStart,
+            [FromQuery] int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -82,6 +93,8 @@ namespace PostlyApi.Controllers
             {
                 return Unauthorized();
             }
+
+            if (paginationStart == null) paginationStart = DateTimeOffset.UtcNow;
 
             return Ok(_db.Posts
                       .Where(p => p.CreatedAt < paginationStart && p.Author.Id == user.Id)
@@ -102,7 +115,9 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed([Required] DateTimeOffset paginationStart, int pageSize = 10)
+        public ActionResult<IEnumerable<PostDTO>> GetPrivateFeed(
+            [FromQuery] DateTimeOffset? paginationStart,
+            [FromQuery] int pageSize = 10)
         {
             var user = DbUtilities.GetUserFromContext(HttpContext, _db);
 
@@ -110,6 +125,8 @@ namespace PostlyApi.Controllers
             {
                 return Unauthorized();
             }
+
+            if (paginationStart == null) paginationStart = DateTimeOffset.UtcNow;
 
             _db.Entry(user).Collection(u => u.Following).Load();
 
