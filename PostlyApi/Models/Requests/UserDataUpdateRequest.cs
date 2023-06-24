@@ -10,7 +10,7 @@ namespace PostlyApi.Models.Requests
         // public data: 
         public string? DisplayName { get; set; }
         public DateTimeOffset? Birthday { get; set; }
-        public Gender? Gender { get; set; }
+        public Gender Gender { get; set; }
 
         // private data:
         public string? Email { get; set; }

@@ -55,7 +55,7 @@ namespace PostlyApi.Controllers
         public ActionResult<IDictionary<Gender, int>> GetGenderCounts()
         {
             var result = _db.Users
-                .GroupBy(_ => _.Gender ?? Gender.NoAnswer)
+                .GroupBy(u => u.Gender)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             return Ok(result);

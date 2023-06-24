@@ -12,7 +12,7 @@ namespace PostlyApi.Entities
         public string? DisplayName { get; set; }
         public Role Role { get; set; }
         public DateTimeOffset? Birthday { get; set; }
-        public Gender? Gender { get; set; }
+        public Gender Gender { get; set; }
 
         // private data:
         public byte[] PasswordHash { get; set; }
@@ -51,6 +51,7 @@ namespace PostlyApi.Entities
             PasswordHash = passwordHash;
             Role = role;
             CreatedAt = DateTimeOffset.UtcNow;
+            Gender = Gender.NoAnswer;
         }
     }
 
