@@ -8,7 +8,7 @@ namespace PostlyApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = nameof(Role.Admin) + "," + nameof(Role.Moderator))]
     public class StatisticController : ControllerBase
     {
         private readonly PostlyContext _db;
@@ -25,8 +25,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> GetUsersTotal()
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
 
             var result = _db.Users.Count();
             return Ok(result);
@@ -39,9 +37,6 @@ namespace PostlyApi.Controllers
             [FromQuery] DateTimeOffset? start,
             [FromQuery] DateTimeOffset? end)
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var endDate = (end == null) ? DateTimeOffset.UtcNow.Date : end.Value.Date;
             var startDate = (start == null) ? endDate.AddMonths(-1) : start.Value.Date;
 
@@ -58,9 +53,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IDictionary<Gender, int>> GetGenderCounts()
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var result = _db.Users
                 .GroupBy(u => u.Gender)
                 .ToDictionary(g => g.Key, g => g.Count());
@@ -78,9 +70,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> GetPostsTotal()
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var result = _db.Posts.Count();
 
             return result;
@@ -93,9 +82,6 @@ namespace PostlyApi.Controllers
             [FromQuery] DateTimeOffset? start,
             [FromQuery] DateTimeOffset? end)
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var endDate = (end == null) ? DateTimeOffset.UtcNow.Date : end.Value.Date;
             var startDate = (start == null) ? endDate.AddMonths(-1) : start.Value.Date;
 
@@ -117,9 +103,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> GetCommentsTotal()
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var result = _db.Comments.Count();
 
             return Ok(result);
@@ -132,9 +115,6 @@ namespace PostlyApi.Controllers
             [FromQuery] DateTimeOffset? start, 
             [FromQuery] DateTimeOffset? end)
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var endDate = (end == null) ? DateTimeOffset.UtcNow.Date : end.Value.Date;
             var startDate = (start == null) ? endDate.AddMonths(-1) : start.Value.Date;
 
@@ -156,9 +136,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<int> GetLoginsTotal()
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var result = _db.Logins.Count();
 
             return Ok(result);
@@ -169,9 +146,6 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IDictionary<DateTime, int>> GetLoginsPerDay([FromQuery] DateTimeOffset? start, DateTimeOffset? end)
         {
-            var user = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (!(user?.Role > 0)) { return Forbid(); }
-
             var endDate = (end == null) ? DateTimeOffset.UtcNow.Date : end.Value.Date;
             var startDate = (start == null) ? endDate.AddMonths(-1) : start.Value.Date;
 
