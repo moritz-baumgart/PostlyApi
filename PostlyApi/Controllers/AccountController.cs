@@ -177,7 +177,7 @@ namespace PostlyApi.Controllers
                 return NotFound(Error.UserNotFound);
             }
 
-            var result = DbUtilities.GetUserProfile(targetUser, _db);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }
@@ -458,7 +458,7 @@ namespace PostlyApi.Controllers
                 _db.SaveChanges();
             }
 
-            var result = DbUtilities.GetUserProfile(targetUser, _db);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }
@@ -493,7 +493,7 @@ namespace PostlyApi.Controllers
             sourceUser.Following.Remove(targetUser);
             _db.SaveChanges();
 
-            var result = DbUtilities.GetUserProfile(targetUser, _db);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }
@@ -547,7 +547,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            var result = DbUtilities.GetUserProfile(currentUser, _db);
+            var result = DbUtilities.GetUserProfile(currentUser, _db, HttpContext);
 
             return Ok(result);
         }
@@ -755,7 +755,7 @@ namespace PostlyApi.Controllers
                 _db.SaveChanges();
             }
 
-            var result = DbUtilities.GetUserProfile(targetUser, _db);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }
@@ -784,7 +784,7 @@ namespace PostlyApi.Controllers
             sourceUser.Following.Remove(targetUser);
             _db.SaveChanges();
 
-            var result = DbUtilities.GetUserProfile(targetUser, _db);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }

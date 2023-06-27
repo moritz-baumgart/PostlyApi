@@ -57,10 +57,12 @@ namespace PostlyApi.Utilities
             return result;
         }
 
-        public static UserProfileViewModel GetUserProfile(User user, PostlyContext _db)
+        public static UserProfileViewModel GetUserProfile(User user, PostlyContext _db, HttpContext httpContext)
         {
             _db.Entry(user).Collection(u => u.Follower).Load();
             _db.Entry(user).Collection(u => u.Following).Load();
+
+            var currentUser = GetUserFromContext(httpContext, _db);
 
             var result = new UserProfileViewModel
             {
@@ -72,7 +74,8 @@ namespace PostlyApi.Utilities
                 FollowerCount = user.Follower.Count(),
                 FollowingCount = user.Following.Count(),
                 Birthday = user.Birthday,
-                Gender = user.Gender
+                Gender = user.Gender,
+                Follow = currentUser != null ? user.Follower.Contains(currentUser) : null
             };
 
             return result;
