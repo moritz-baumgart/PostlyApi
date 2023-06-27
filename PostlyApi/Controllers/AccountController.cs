@@ -351,6 +351,40 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        [HttpPut("{username}/picture")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
+        public ActionResult<UserDataViewModel> UpdateProfilePicture([FromRoute] string username, [FromBody] byte[] picture)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
+            if (targetUser == null)
+            {
+                return NotFound(Error.UserNotFound);
+            }
+
+            // if the current user is not an admin:
+            if (currentUser.Role != Role.Admin)
+            {
+                return Forbid();
+            }
+
+            targetUser.ProfilePicture = picture;
+            _db.SaveChanges();
+
+            var result = DbUtilities.GetUserData(targetUser);
+
+            return Ok(result);
+        }
+
         [HttpGet("{username}/followers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -622,6 +656,24 @@ namespace PostlyApi.Controllers
             }
 
             currentUser.Username = newUsername;
+            _db.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPut("me/picture")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult ChangeProfilePicture([FromBody] byte[] picture)
+        {
+            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            currentUser.ProfilePicture = picture;
             _db.SaveChanges();
 
             return Ok();

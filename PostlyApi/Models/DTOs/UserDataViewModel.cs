@@ -12,6 +12,7 @@ namespace PostlyApi.Models.DTOs
         public Role Role { get; set; }
         public DateTimeOffset? Birthday { get; set; }
         public Gender? Gender { get; set; }
+        public byte[]? ProfilePicture { get; set; }
 
         // private data:
         public string? Email { get; set; }

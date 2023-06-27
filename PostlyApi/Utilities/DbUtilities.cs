@@ -52,6 +52,7 @@ namespace PostlyApi.Utilities
                 Id = user.Id,
                 Username = user.Username,
                 DisplayName = user.DisplayName,
+                ProfilePicture = user.ProfilePicture,
             };
 
             return result;
@@ -94,6 +95,7 @@ namespace PostlyApi.Utilities
                 PhoneNumber = user.PhoneNumber,
                 Birthday = user.Birthday,
                 Gender = user.Gender,
+                ProfilePicture = user.ProfilePicture
             };
 
             return result;
