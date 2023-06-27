@@ -13,6 +13,7 @@ namespace PostlyApi.Entities
         public Role Role { get; set; }
         public DateTimeOffset? Birthday { get; set; }
         public Gender Gender { get; set; }
+        public byte[]? ProfilePicture { get; set; }
 
         // private data:
         public byte[] PasswordHash { get; set; }
