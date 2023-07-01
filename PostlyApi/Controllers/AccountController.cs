@@ -357,7 +357,7 @@ namespace PostlyApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> UpdateProfilePicture([FromRoute] string username, [FromBody] byte[] picture)
+        public ActionResult<UserDataViewModel> UpdateProfilePicture([FromRoute] string username, [FromBody] string pictureAsBase64String)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -377,7 +377,7 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
-            targetUser.ProfilePicture = picture;
+            targetUser.ProfilePicture = Convert.FromBase64String(pictureAsBase64String);
             _db.SaveChanges();
 
             var result = DbUtilities.GetUserData(targetUser);
@@ -665,7 +665,7 @@ namespace PostlyApi.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult ChangeProfilePicture([FromBody] byte[] picture)
+        public ActionResult ChangeProfilePicture([FromBody] string pictureAsBase64String)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -673,7 +673,7 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
-            currentUser.ProfilePicture = picture;
+            currentUser.ProfilePicture = Convert.FromBase64String(pictureAsBase64String);
             _db.SaveChanges();
 
             return Ok();
