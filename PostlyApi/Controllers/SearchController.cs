@@ -34,7 +34,8 @@ namespace PostlyApi.Controllers
                     .OrderBy(_ => _.Username)
                     .Select(_ => DbUtilities.GetUserDTO(_))
                     .AsEnumerable();
-            } else
+            }
+            else
             {
                 result = _db.Users
                     .Where(_ => _.Username.Contains(username))
@@ -43,10 +44,10 @@ namespace PostlyApi.Controllers
                     .AsEnumerable();
 
                 var prio1 = result
-                .Where(_ => _.Username.StartsWith(username));
+                    .Where(_ => _.Username.StartsWith(username, StringComparison.OrdinalIgnoreCase));
 
                 var prio2 = result
-                    .Where(_ => !_.Username.StartsWith(username));
+                    .Where(_ => !_.Username.StartsWith(username, StringComparison.OrdinalIgnoreCase));
 
                 result = prio1.Concat(prio2);
             }
