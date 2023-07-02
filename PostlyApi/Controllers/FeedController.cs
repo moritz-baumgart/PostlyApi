@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
 using PostlyApi.Utilities;
-using System.ComponentModel.DataAnnotations;
 
 namespace PostlyApi.Controllers
 {
@@ -28,7 +27,6 @@ namespace PostlyApi.Controllers
         /// <returns>The page of posts as <see cref="IEnumerable{T}"/> of <see cref="Models.DTOs.PostDTO"/></returns>
         [HttpGet("public")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PostDTO>))]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IEnumerable<PostDTO>> GetPublicFeed(
             [FromQuery] DateTimeOffset? paginationStart,
             [FromQuery] int pageSize = 10)

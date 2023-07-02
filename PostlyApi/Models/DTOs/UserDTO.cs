@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata;
-
-namespace PostlyApi.Models.DTOs
+﻿namespace PostlyApi.Models.DTOs
 {
     public class UserDTO
     {
