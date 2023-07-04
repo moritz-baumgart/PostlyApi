@@ -319,11 +319,11 @@ namespace PostlyApi.Controllers
 
         [HttpPut("{username}/role")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> UpdateRole([FromRoute] string username, [FromBody] Role role)
+        public ActionResult<UserProfileViewModel> UpdateRole([FromRoute] string username, [FromBody] Role role)
         {
             var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
             if (currentUser == null)
@@ -346,7 +346,7 @@ namespace PostlyApi.Controllers
             targetUser.Role = role;
             _db.SaveChanges();
 
-            var result = DbUtilities.GetUserData(targetUser);
+            var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
 
             return Ok(result);
         }
