@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PostlyApi.Enums;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PostlyApi.Controllers
 {
@@ -27,7 +29,8 @@ namespace PostlyApi.Controllers
         /// <returns>A <see cref="DatabaseOperationDTO"/> that contains the result.</returns>
         [HttpPost("Execute")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DatabaseOperationDTO))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(List<string>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<DatabaseOperationDTO> Execute([FromBody] string query)
         {
 
@@ -66,9 +69,18 @@ namespace PostlyApi.Controllers
                     return Ok(new DatabaseOperationDTO(numberOfAffectedRows, null, null));
                 }
             }
+            catch (SqlException ex)
+            {
+                var errorMessages = new List<string>();
+                foreach (SqlError error in ex.Errors)
+                {
+                    errorMessages.Add(error.Message);
+                }
+                return BadRequest(errorMessages);
+            }
             catch (Exception)
             {
-                return BadRequest();
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }
     }
