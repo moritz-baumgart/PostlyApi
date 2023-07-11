@@ -35,8 +35,7 @@ namespace PostlyApi.Models
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Posts)
                 .WithOne(p => p.Author)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasForeignKey(e => e.UserId);
 
             modelBuilder.Entity<Vote>()
                 .HasKey(v => new { v.UserId, v.PostId });
