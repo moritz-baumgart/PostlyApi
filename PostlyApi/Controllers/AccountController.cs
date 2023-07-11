@@ -155,7 +155,7 @@ namespace PostlyApi.Controllers
             }
 
             // if the current user doesn't have permission to delete this account:
-            if (!(currentUser == targetUser || currentUser.Role == Role.Admin))
+            if (!(currentUser == targetUser || currentUser.Role >= Role.Moderator))
             {
                 return Forbid();
             }
@@ -347,40 +347,6 @@ namespace PostlyApi.Controllers
             _db.SaveChanges();
 
             var result = DbUtilities.GetUserProfile(targetUser, _db, HttpContext);
-
-            return Ok(result);
-        }
-
-        [HttpPut("{username}/picture")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
-        public ActionResult<UserDataViewModel> UpdateProfilePicture([FromRoute] string username, [FromBody] string pictureAsBase64String)
-        {
-            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var targetUser = _db.Users.FirstOrDefault(u => u.Username == username);
-            if (targetUser == null)
-            {
-                return NotFound(Error.UserNotFound);
-            }
-
-            // if the current user is not an admin:
-            if (currentUser.Role != Role.Admin)
-            {
-                return Forbid();
-            }
-
-            targetUser.ProfilePicture = Convert.FromBase64String(pictureAsBase64String);
-            _db.SaveChanges();
-
-            var result = DbUtilities.GetUserData(targetUser);
 
             return Ok(result);
         }
@@ -656,24 +622,6 @@ namespace PostlyApi.Controllers
             }
 
             currentUser.Username = newUsername;
-            _db.SaveChanges();
-
-            return Ok();
-        }
-
-        [HttpPut("me/picture")]
-        [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult ChangeProfilePicture([FromBody] string pictureAsBase64String)
-        {
-            var currentUser = DbUtilities.GetUserFromContext(HttpContext, _db);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            currentUser.ProfilePicture = Convert.FromBase64String(pictureAsBase64String);
             _db.SaveChanges();
 
             return Ok();
