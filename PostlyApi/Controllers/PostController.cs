@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostlyApi.Entities;
 using PostlyApi.Enums;
+using PostlyApi.Manager;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
 using PostlyApi.Utilities;
@@ -14,10 +15,12 @@ namespace PostlyApi.Controllers
     public class PostController : ControllerBase
     {
         private readonly PostlyContext _db;
+        private readonly ImageManager _imageManager;
 
         public PostController(PostlyContext dbContext)
         {
             _db = dbContext;
+            _imageManager = new ImageManager(dbContext);
         }
 
         /// <summary>
@@ -37,7 +40,18 @@ namespace PostlyApi.Controllers
 
             if (content.Length > 282) { return BadRequest(Error.CharacterLimitExceeded); }
 
-            var newPost = _db.Posts.Add(new Post(content, user, DateTimeOffset.Now));
+            Image? image = null;
+            using (var memStream = new MemoryStream())
+            {
+                var file = Request.Form.Files[0];
+                if (file != null)
+                {
+                    file.CopyTo(memStream);
+                    image = _imageManager.Add(memStream.ToArray());
+                }
+            }
+
+            var newPost = _db.Posts.Add(new Post(content, user, DateTimeOffset.Now, image));
             _db.SaveChanges();
             return Ok(newPost.Entity.Id);
         }

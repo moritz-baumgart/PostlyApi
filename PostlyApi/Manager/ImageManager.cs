@@ -1,0 +1,97 @@
+﻿using PostlyApi.Entities;
+using PostlyApi.Models;
+
+namespace PostlyApi.Manager
+{
+    public class ImageManager : BaseManager
+    {
+        public ImageManager(PostlyContext dbContext) : base(dbContext) 
+        { 
+        }
+
+        public Image Add(byte[] data)
+        {
+            var result = _db.Images.Add(new Image { Data = data }).Entity;
+            _db.SaveChanges();
+
+            return result;
+        }
+
+        public Image? Get(Guid? id)
+        {
+            return _db.Images.FirstOrDefault(_ => _.Id == id);
+        }
+
+        public Image? Get(User user)
+        {
+            return Get(user.ImageId);
+        }
+
+        public Image? Get(Post post)
+        {
+            return Get(post.ImageId);
+        }
+
+        public Image? Update(Guid id, byte[] data)
+        {
+            var image = new Image
+            {
+                Id = id,
+                Data = data
+            };
+
+            return Update(image);
+        }
+
+        public Image Update(User user, byte[] data)
+        {
+            var image = new Image
+            {
+                Id = user.ImageId ?? Guid.NewGuid(),
+                Data = data
+            };
+
+            user.ProfileImage = image;
+
+            return Update(image);
+        }
+
+        public Image Update(Post post, byte[] data)
+        {
+            var image = new Image
+            {
+                Id = post.ImageId ?? Guid.NewGuid(),
+                Data = data
+            };
+
+            post.AttachedImage = image;
+
+            return Update(image);
+        }
+
+        public Image Update(Image image)
+        {
+            var result = _db.Images.Update(image).Entity;
+            _db.SaveChanges();
+
+            return result;
+        }
+
+        public Image? Delete(Guid id)
+        {
+            var image = Get(id);
+
+            return Delete(image);
+        }
+
+        public Image? Delete(Image? image)
+        {
+            if (image == null) return null;
+
+            var result = _db.Images.Remove(image).Entity;
+            _db.SaveChanges();
+
+            return result;
+        }
+    }
+}

@@ -52,7 +52,7 @@ namespace PostlyApi.Utilities
                 Id = user.Id,
                 Username = user.Username,
                 DisplayName = user.DisplayName,
-                ProfilePicture = user.ProfilePicture,
+                ProfileImageUrl = $"api/image/{user.ImageId}",
             };
 
             return result;
@@ -76,6 +76,7 @@ namespace PostlyApi.Utilities
                 FollowingCount = user.Following.Count(),
                 Birthday = user.Birthday,
                 Gender = user.Gender,
+                ProfileImageUrl = $"api/image/{user.ImageId}",
                 Follow = currentUser != null ? user.Follower.Contains(currentUser) : null
             };
 
@@ -95,7 +96,7 @@ namespace PostlyApi.Utilities
                 PhoneNumber = user.PhoneNumber,
                 Birthday = user.Birthday,
                 Gender = user.Gender,
-                ProfilePicture = user.ProfilePicture
+                ProfileImageUrl = $"api/image/{user.ImageId}",
             };
 
             return result;
@@ -113,6 +114,7 @@ namespace PostlyApi.Utilities
                 Content = post.Content,
                 Author = GetUserDTO(post.Author),
                 CreatedAt = post.CreatedAt,
+                AttachedImageUrl = $"api/image/{post.ImageId}",
                 UpvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Upvote).Count(),
                 DownvoteCount = post.Votes.Where(v => v.VoteType == VoteType.Downvote).Count(),
                 CommentCount = post.Comments.Count,

@@ -10,6 +10,7 @@ namespace PostlyApi.Models
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Vote> Votes { get; set; }
         public DbSet<Login> Logins { get; set; }
+        public DbSet<Image> Images { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)

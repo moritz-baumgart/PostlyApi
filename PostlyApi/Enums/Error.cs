@@ -6,6 +6,7 @@
         UserNotFound,
         PostNotFound,
         CommentNotFound,
+        ImageNotFound,
         UsernameAlreadyInUse,
         CharacterLimitExceeded,
         InteractionAlreadyMade,

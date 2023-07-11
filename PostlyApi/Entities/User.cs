@@ -13,7 +13,8 @@ namespace PostlyApi.Entities
         public Role Role { get; set; }
         public DateTimeOffset? Birthday { get; set; }
         public Gender Gender { get; set; }
-        public byte[]? ProfilePicture { get; set; }
+        public Guid? ImageId { get; set; }
+        public Image? ProfileImage { get; set; }
 
         // private data:
         public byte[] PasswordHash { get; set; }
@@ -36,7 +37,8 @@ namespace PostlyApi.Entities
         /// <param name="username">The username the new user should have.</param>
         /// <param name="password">The password the new user should have, it will be hashed using HMACSHA512.</param>
         /// <param name="role">The role the new user should have.</param>
-        public User(string username, string password, Role role = Role.User) : this(username, PasswordUtilities.ComputePasswordHash(password), role) { }
+        public User(string username, string password, Role role = Role.User) 
+            : this(username, PasswordUtilities.ComputePasswordHash(password), role) { }
 
         /// <summary>
         /// Creates a new user with given username, password and role.
@@ -55,5 +57,4 @@ namespace PostlyApi.Entities
             Gender = Gender.NoAnswer;
         }
     }
-
 }
