@@ -10,14 +10,12 @@ namespace PostlyApi.Controllers
     [ApiController]
     public class ImageController : ControllerBase
     {
-        private readonly PostlyContext _db;
         private readonly ImageManager _imageManager;
         private readonly UserManager _userManager;
         private readonly PostManager _postManager;
 
         public ImageController(PostlyContext dbContext)
         {
-            _db = dbContext;
             _imageManager = new ImageManager(dbContext);
             _userManager = new UserManager(dbContext);
             _postManager = new PostManager(dbContext);
@@ -34,7 +32,7 @@ namespace PostlyApi.Controllers
                 return NotFound(Error.ImageNotFound);
             }
 
-            return File(result.Data, "image/jpeg");
+            return File(result.Data, result.ContentType);
         }
 
 
@@ -55,7 +53,7 @@ namespace PostlyApi.Controllers
                 return NotFound(Error.ImageNotFound);
             }
 
-            return File(result.Data, "image/jpeg");
+            return File(result.Data, result.ContentType);
         }
 
         [HttpPut("user/{username}")]
@@ -67,22 +65,25 @@ namespace PostlyApi.Controllers
                 return NotFound(Error.UserNotFound);
             }
 
-            using (var memStream = new MemoryStream())
+            if (!Request.Form.Files.Any())
             {
-                var file = Request.Form.Files[0];
-
-                if (file == null)
-                {
-                    return BadRequest();
-                }
-
-                file.CopyTo(memStream);
-                var data = memStream.ToArray();
-                
-                var result = _imageManager.Update(user, data);
-
-                return File(result.Data, "image/jpeg");
+                return BadRequest();
             }
+
+            var file = Request.Form.Files[0];
+
+            if (file == null)
+            {
+                return BadRequest();
+            }
+
+            using var memStream = new MemoryStream();
+            file.CopyTo(memStream);
+            var data = memStream.ToArray();
+
+            _imageManager.Update(user, data, file.ContentType);
+
+            return Ok();
         }
 
         #endregion profile image
@@ -102,10 +103,10 @@ namespace PostlyApi.Controllers
             var result = _imageManager.Get(post);
             if (result == null)
             {
-                return NotFound();
+                return NotFound(Error.ImageNotFound);
             }
 
-            return File(result.Data, "image/jpeg");
+            return File(result.Data, result.ContentType);
         }
 
         [HttpPut("post/{postId}")]
@@ -117,7 +118,11 @@ namespace PostlyApi.Controllers
                 return NotFound(Error.PostNotFound);
             }
 
-            using var memStream = new MemoryStream();
+            if (!Request.Form.Files.Any())
+            {
+                return BadRequest();
+            }
+
             var file = Request.Form.Files[0];
 
             if (file == null)
@@ -125,10 +130,11 @@ namespace PostlyApi.Controllers
                 return BadRequest();
             }
 
+            using var memStream = new MemoryStream();
             file.CopyTo(memStream);
             var data = memStream.ToArray();
 
-            _imageManager.Update(post, data);
+            _imageManager.Update(post, data, file.ContentType);
 
             return Ok();
         }

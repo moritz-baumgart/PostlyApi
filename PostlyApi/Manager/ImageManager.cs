@@ -9,9 +9,14 @@ namespace PostlyApi.Manager
         { 
         }
 
-        public Image Add(byte[] data)
+        public Image Add(byte[] data, string contentType)
         {
-            var result = _db.Images.Add(new Image { Data = data }).Entity;
+            var result = _db.Images.Add(new Image
+            {
+                Data = data,
+                ContentType = contentType,
+            }).Entity;
+
             _db.SaveChanges();
 
             return result;
@@ -32,23 +37,25 @@ namespace PostlyApi.Manager
             return Get(post.ImageId);
         }
 
-        public Image? Update(Guid id, byte[] data)
+        public Image? Update(Guid id, byte[] data, string contentType)
         {
             var image = new Image
             {
                 Id = id,
-                Data = data
+                Data = data,
+                ContentType = contentType,
             };
 
             return Update(image);
         }
 
-        public Image Update(User user, byte[] data)
+        public Image Update(User user, byte[] data, string contentType)
         {
             var image = new Image
             {
-                Id = user.ImageId ?? Guid.NewGuid(),
-                Data = data
+                Id = user.ImageId ?? Guid.Empty,
+                Data = data,
+                ContentType = contentType,
             };
 
             user.ProfileImage = image;
@@ -56,12 +63,13 @@ namespace PostlyApi.Manager
             return Update(image);
         }
 
-        public Image Update(Post post, byte[] data)
+        public Image Update(Post post, byte[] data, string contentType)
         {
             var image = new Image
             {
-                Id = post.ImageId ?? Guid.NewGuid(),
-                Data = data
+                Id = post.ImageId ?? Guid.Empty,
+                Data = data,
+                ContentType = contentType,
             };
 
             post.AttachedImage = image;

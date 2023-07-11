@@ -4,8 +4,8 @@
     {
         public int Id { get; set; }
         public string Content { get; set; }
-        public long UserId { get; set; }
-        public User Author { get; set; }
+        public long UserId { get; set; } 
+        public User Author { get; set; } 
         public DateTimeOffset CreatedAt { get; set; }
         public Guid? ImageId { get; set; }
         public Image? AttachedImage { get; set; }
@@ -22,14 +22,10 @@
         }
 
         public Post(string content, User author, DateTimeOffset createdAt)
-            : this(content, author, createdAt, null) { }
-
-        public Post(string content, User author, DateTimeOffset createdAt, Image? image)
         {
             Content = content;
             Author = author;
             CreatedAt = createdAt;
-            AttachedImage = image;
         }
     }
 }

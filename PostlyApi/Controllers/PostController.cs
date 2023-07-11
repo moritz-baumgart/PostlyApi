@@ -40,18 +40,7 @@ namespace PostlyApi.Controllers
 
             if (content.Length > 282) { return BadRequest(Error.CharacterLimitExceeded); }
 
-            Image? image = null;
-            using (var memStream = new MemoryStream())
-            {
-                var file = Request.Form.Files[0];
-                if (file != null)
-                {
-                    file.CopyTo(memStream);
-                    image = _imageManager.Add(memStream.ToArray());
-                }
-            }
-
-            var newPost = _db.Posts.Add(new Post(content, user, DateTimeOffset.Now, image));
+            var newPost = _db.Posts.Add(new Post(content, user, DateTimeOffset.Now));
             _db.SaveChanges();
             return Ok(newPost.Entity.Id);
         }
