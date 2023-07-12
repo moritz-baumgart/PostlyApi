@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PostlyApi.Models;
 
@@ -11,9 +12,11 @@ using PostlyApi.Models;
 namespace PostlyApi.Migrations
 {
     [DbContext(typeof(PostlyContext))]
-    partial class PostlyContextModelSnapshot : ModelSnapshot
+    [Migration("20230710181619_AddImageTable")]
+    partial class AddImageTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,10 +91,6 @@ namespace PostlyApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<byte[]>("Data")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
@@ -131,15 +130,10 @@ namespace PostlyApi.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("ImageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ImageId");
 
                     b.HasIndex("UserId");
 
@@ -169,15 +163,15 @@ namespace PostlyApi.Migrations
                     b.Property<int>("Gender")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("ImageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<byte[]>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("ProfilePicture")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
@@ -187,8 +181,6 @@ namespace PostlyApi.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ImageId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -291,28 +283,13 @@ namespace PostlyApi.Migrations
 
             modelBuilder.Entity("PostlyApi.Entities.Post", b =>
                 {
-                    b.HasOne("PostlyApi.Entities.Image", "AttachedImage")
-                        .WithMany()
-                        .HasForeignKey("ImageId");
-
                     b.HasOne("PostlyApi.Entities.User", "Author")
                         .WithMany("Posts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AttachedImage");
-
                     b.Navigation("Author");
-                });
-
-            modelBuilder.Entity("PostlyApi.Entities.User", b =>
-                {
-                    b.HasOne("PostlyApi.Entities.Image", "ProfileImage")
-                        .WithMany()
-                        .HasForeignKey("ImageId");
-
-                    b.Navigation("ProfileImage");
                 });
 
             modelBuilder.Entity("PostlyApi.Entities.Vote", b =>

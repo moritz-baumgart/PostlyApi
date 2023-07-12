@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostlyApi.Entities;
 using PostlyApi.Enums;
+using PostlyApi.Manager;
 using PostlyApi.Models;
 using PostlyApi.Models.DTOs;
 using PostlyApi.Utilities;
@@ -14,10 +15,12 @@ namespace PostlyApi.Controllers
     public class PostController : ControllerBase
     {
         private readonly PostlyContext _db;
+        private readonly ImageManager _imageManager;
 
         public PostController(PostlyContext dbContext)
         {
             _db = dbContext;
+            _imageManager = new ImageManager(dbContext);
         }
 
         /// <summary>

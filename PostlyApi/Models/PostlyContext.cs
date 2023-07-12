@@ -10,6 +10,7 @@ namespace PostlyApi.Models
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Vote> Votes { get; set; }
         public DbSet<Login> Logins { get; set; }
+        public DbSet<Image> Images { get; set; }
 
 
         public PostlyContext(DbContextOptions<PostlyContext> options) : base(options)
@@ -35,7 +36,8 @@ namespace PostlyApi.Models
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Posts)
                 .WithOne(p => p.Author)
-                .HasForeignKey(e => e.UserId);
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Vote>()
                 .HasKey(v => new { v.UserId, v.PostId });

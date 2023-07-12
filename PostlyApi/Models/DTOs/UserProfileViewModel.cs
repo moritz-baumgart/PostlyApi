@@ -13,7 +13,7 @@ namespace PostlyApi.Models.DTOs
         public int FollowingCount { get; set; }
         public DateTimeOffset? Birthday { get; set; }
         public Gender? Gender { get; set; }
-        public byte[]? ProfilePicture { get; set; }
+        public string? ProfileImageUrl { get; set; }
         public bool? Follow { get; set; }
     }
 }

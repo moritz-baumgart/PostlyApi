@@ -4,9 +4,11 @@
     {
         public int Id { get; set; }
         public string Content { get; set; }
-        public long UserId { get; set; }
-        public User Author { get; set; }
+        public long UserId { get; set; } 
+        public User Author { get; set; } 
         public DateTimeOffset CreatedAt { get; set; }
+        public Guid? ImageId { get; set; }
+        public Image? AttachedImage { get; set; }
         public ICollection<Vote> Votes { get; set; } = new List<Vote>();
         public ICollection<User> UpvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
         public ICollection<User> DownvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
