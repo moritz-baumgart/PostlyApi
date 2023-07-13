@@ -51,9 +51,11 @@ namespace PostlyApi.Manager
 
         public Image Update(User user, byte[] data, string contentType)
         {
+            var oldImage = Get(user);
+            Delete(oldImage);
+
             var image = new Image
             {
-                Id = user.ImageId ?? Guid.Empty,
                 Data = data,
                 ContentType = contentType,
             };
@@ -65,9 +67,11 @@ namespace PostlyApi.Manager
 
         public Image Update(Post post, byte[] data, string contentType)
         {
+            var oldImage = Get(post);
+            Delete(oldImage);
+
             var image = new Image
             {
-                Id = post.ImageId ?? Guid.Empty,
                 Data = data,
                 ContentType = contentType,
             };
