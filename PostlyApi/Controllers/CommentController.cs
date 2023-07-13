@@ -45,7 +45,7 @@ namespace PostlyApi.Controllers
             post.Comments.Add(new Comment(user, post, request.CommentContent));
             _db.SaveChanges();
 
-            var commentCount = _db.Comments.Count();
+            var commentCount = _db.Comments.Where(c => c.PostId == request.PostId).Count();
 
             return Ok(commentCount);
         }
