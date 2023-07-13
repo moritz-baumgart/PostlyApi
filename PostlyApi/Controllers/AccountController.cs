@@ -160,6 +160,11 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
+            _db.Entry(targetUser).Collection(u => u.Posts).Load();
+            foreach(var post in targetUser.Posts)
+            {
+                _db.Remove(post);
+            }
             _db.Remove(targetUser);
             _db.SaveChanges();
 
@@ -529,6 +534,11 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
+            _db.Entry(currentUser).Collection(u => u.Posts).Load();
+            foreach (var post in currentUser.Posts)
+            {
+                _db.Remove(post);
+            }
             _db.Remove(currentUser);
             _db.SaveChanges();
 

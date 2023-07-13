@@ -10,8 +10,6 @@
         public Guid? ImageId { get; set; }
         public Image? AttachedImage { get; set; }
         public ICollection<Vote> Votes { get; set; } = new List<Vote>();
-        public ICollection<User> UpvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
-        public ICollection<User> DownvotedBy { get; set; } = new List<User>(); // TODO : marked for removal
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
         /// <summary>

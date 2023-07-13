@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PostlyApi.Models;
 
@@ -11,9 +12,11 @@ using PostlyApi.Models;
 namespace PostlyApi.Migrations
 {
     [DbContext(typeof(PostlyContext))]
-    partial class PostlyContextModelSnapshot : ModelSnapshot
+    [Migration("20230713122249_v14-DeleteBehavior")]
+    partial class v14DeleteBehavior
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,7 +213,7 @@ namespace PostlyApi.Migrations
                     b.HasOne("PostlyApi.Entities.User", "Author")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Author");

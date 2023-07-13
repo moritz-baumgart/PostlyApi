@@ -27,8 +27,6 @@ namespace PostlyApi.Entities
         public ICollection<User> Following { get; set; } = new List<User>(); // public
         public ICollection<Post> Posts { get; set; } = new List<Post>(); // public
         public ICollection<Vote> Votes { get; set; } = new List<Vote>(); // private?
-        public ICollection<Post> UpvotedPosts { get; set; } = new List<Post>(); // TODO : marked for removal
-        public ICollection<Post> DownvotedPosts { get; set; } = new List<Post>(); // TODO : marked for removal
         public ICollection<Comment> Comments { get; set; } = new List<Comment>(); // public?
 
         /// <summary>

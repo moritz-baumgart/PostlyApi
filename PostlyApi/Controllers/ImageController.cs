@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Manager;
 using PostlyApi.Models;
@@ -99,13 +100,13 @@ namespace PostlyApi.Controllers
 
             var image = _imageManager.Update(user, data, file.ContentType);
 
-            return Ok($"image/{image.Id}");
+            return Ok($"\"image/{image.Id}\"");
         }
 
-        [HttpDelete("user/{userId}")]
-        public ActionResult DeleteUserImage([FromRoute] long userId)
+        [HttpDelete("user/{username}")]
+        public ActionResult DeleteUserImage([FromRoute] string username)
         {
-            var user = _userManager.Get(userId);
+            var user = _userManager.Get(username);
             if (user == null)
             {
                 return NotFound(Error.UserNotFound);
@@ -172,7 +173,7 @@ namespace PostlyApi.Controllers
 
             var image = _imageManager.Update(post, data, file.ContentType);
 
-            return Ok($"image/{image.Id}");
+            return Ok($"\"image/{image.Id}\"");
         }
 
         [HttpDelete("post/{postId}")]
