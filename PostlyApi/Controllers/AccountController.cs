@@ -160,11 +160,18 @@ namespace PostlyApi.Controllers
                 return Forbid();
             }
 
+            // remove posts
             _db.Entry(targetUser).Collection(u => u.Posts).Load();
             foreach(var post in targetUser.Posts)
             {
                 _db.Remove(post);
             }
+
+            // remove followers
+            _db.Entry(targetUser).Collection(u => u.Follower).Load();
+            targetUser.Follower.Clear();
+            _db.SaveChanges();
+
             _db.Remove(targetUser);
             _db.SaveChanges();
 
@@ -534,11 +541,18 @@ namespace PostlyApi.Controllers
                 return Unauthorized();
             }
 
+            // remove posts
             _db.Entry(currentUser).Collection(u => u.Posts).Load();
             foreach (var post in currentUser.Posts)
             {
                 _db.Remove(post);
             }
+
+            // remove followers
+            _db.Entry(currentUser).Collection(u => u.Follower).Load();
+            currentUser.Follower.Clear();
+            _db.SaveChanges();
+
             _db.Remove(currentUser);
             _db.SaveChanges();
 
