@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PostlyApi.Entities;
 using PostlyApi.Enums;
 using PostlyApi.Manager;
 using PostlyApi.Models;
@@ -21,6 +20,7 @@ namespace PostlyApi.Controllers
             _postManager = new PostManager(dbContext);
         }
 
+        #region image
 
         [HttpGet("{imageId}")]
         public ActionResult Get([FromRoute] Guid imageId)
@@ -34,6 +34,22 @@ namespace PostlyApi.Controllers
 
             return File(result.Data, result.ContentType);
         }
+
+        [HttpDelete("{imageId}")]
+        public ActionResult DeleteUserImage([FromRoute] Guid imageId)
+        {
+            var image = _imageManager.Get(imageId);
+            if (image == null)
+            {
+                return NotFound(Error.ImageNotFound);
+            }
+
+            _imageManager.Delete(image);
+
+            return Ok();
+        }
+
+        #endregion image
 
 
         #region profile image
@@ -57,7 +73,7 @@ namespace PostlyApi.Controllers
         }
 
         [HttpPut("user/{username}")]
-        public ActionResult<Image> UpdateProfileImage([FromRoute] string username)
+        public ActionResult<string> UpdateProfileImage([FromRoute] string username)
         {
             var user = _userManager.Get(username);
             if (user == null)
@@ -81,7 +97,27 @@ namespace PostlyApi.Controllers
             file.CopyTo(memStream);
             var data = memStream.ToArray();
 
-            _imageManager.Update(user, data, file.ContentType);
+            var image = _imageManager.Update(user, data, file.ContentType);
+
+            return Ok($"image/{image.Id}");
+        }
+
+        [HttpDelete("user/{userId}")]
+        public ActionResult DeleteUserImage([FromRoute] long userId)
+        {
+            var user = _userManager.Get(userId);
+            if (user == null)
+            {
+                return NotFound(Error.UserNotFound);
+            }
+
+            var image = _imageManager.Get(user);
+            if (image == null)
+            {
+                return NotFound(Error.ImageNotFound);
+            }
+
+            _imageManager.Delete(image);
 
             return Ok();
         }
@@ -92,7 +128,7 @@ namespace PostlyApi.Controllers
         #region image attached to post
 
         [HttpGet("post/{postId}")]
-        public ActionResult<Image> GetPostImage([FromRoute] int postId)
+        public ActionResult GetPostImage([FromRoute] int postId)
         {
             var post = _postManager.Get(postId);
             if (post == null)
@@ -110,7 +146,7 @@ namespace PostlyApi.Controllers
         }
 
         [HttpPut("post/{postId}")]
-        public ActionResult UpdatePostImage([FromRoute] int postId)
+        public ActionResult<string> UpdatePostImage([FromRoute] int postId)
         {
             var post = _postManager.Get(postId);
             if (post == null)
@@ -134,7 +170,27 @@ namespace PostlyApi.Controllers
             file.CopyTo(memStream);
             var data = memStream.ToArray();
 
-            _imageManager.Update(post, data, file.ContentType);
+            var image = _imageManager.Update(post, data, file.ContentType);
+
+            return Ok($"image/{image.Id}");
+        }
+
+        [HttpDelete("post/{postId}")]
+        public ActionResult DeletePostImage([FromRoute] int postId)
+        {
+            var post = _postManager.Get(postId);
+            if (post == null)
+            {
+                return NotFound(Error.PostNotFound);
+            }
+
+            var image = _imageManager.Get(post);
+            if (image == null)
+            {
+                return NotFound(Error.ImageNotFound);
+            }
+
+            _imageManager.Delete(image);
 
             return Ok();
         }
