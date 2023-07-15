@@ -26,6 +26,7 @@ namespace PostlyApi.Controllers
             _db = dbContext;
         }
 
+
         #region Login & Register
         /// <summary>
         /// Tries to login a user with given credentials and generates a jwt if the user exists and the provided password is correct.
@@ -117,7 +118,12 @@ namespace PostlyApi.Controllers
         }
         #endregion
 
+
         #region {username}
+
+        /// <summary>
+        /// Returns the <see cref="UserDTO"/> of a given user
+        /// </summary>
         [HttpGet("{username}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -134,6 +140,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Deletes a given user and all their associated data from the database
+        /// </summary>
         [HttpDelete("{username}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -178,6 +187,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Returns the <see cref="UserProfileViewModel"/> of a given user
+        /// </summary>
         [HttpGet("{username}/profile")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -194,6 +206,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the <see cref="UserDataViewModel"/> of a given user
+        /// </summary>
         [HttpGet("{username}/data")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -210,6 +225,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Updates the data of a given user
+        /// </summary>
         [HttpPatch("{username}/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
@@ -251,6 +269,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Updates the username of a given user
+        /// </summary>
         [HttpPut("{username}/username")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -290,6 +311,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Updates the password of a given user
+        /// </summary>
         [HttpPut("{username}/password")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -329,6 +353,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Updates the role of a given user
+        /// </summary>
         [HttpPut("{username}/role")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -363,6 +390,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns all followers of a given user
+        /// </summary>
         [HttpGet("{username}/followers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -381,6 +411,10 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+
+        /// <summary>
+        /// Returns the number of users following a given user
+        /// </summary>
         [HttpGet("{username}/followers/count")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -400,6 +434,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns all users followed by a given user
+        /// </summary>
         [HttpGet("{username}/following")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(Error))]
@@ -418,6 +455,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of people followed by a given user
+        /// </summary>
         [HttpGet("{username}/following/count")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -437,6 +477,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Adds a given source user as a follower of a given target user
+        /// </summary>
         [HttpPost("{sourceUsername}/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -475,6 +518,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Removes a given source user as a follower of a given target user
+        /// </summary>
         [HttpDelete("{sourceUsername}/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -511,7 +557,12 @@ namespace PostlyApi.Controllers
         }
         #endregion {username}
 
+
         #region me
+
+        /// <summary>
+        /// Returns the <see cref="UserDTO"/> of the current user
+        /// </summary>
         [HttpGet("me")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
@@ -529,6 +580,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Deletes the current user and all their associated data from the database
+        /// </summary>
         [HttpDelete("me")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -559,6 +613,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Returns the <see cref="UserProfileViewModel"/> of the current user
+        /// </summary>
         [HttpGet("me/profile")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -576,6 +633,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the <see cref="UserDataViewModel"/> of the current user
+        /// </summary>
         [HttpGet("me/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
@@ -593,6 +653,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Updates the data of the current user
+        /// </summary>
         [HttpPatch("me/data")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDataViewModel))]
@@ -620,6 +683,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Updates the username of the current user
+        /// </summary>
         [HttpPut("me/username")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -651,6 +717,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Updates the password of the current user
+        /// </summary>
         [HttpPut("me/password")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -676,6 +745,9 @@ namespace PostlyApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Returns all followers of the current user
+        /// </summary>
         [HttpGet("me/followers")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
@@ -695,6 +767,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of followers of the current user
+        /// </summary>
         [HttpGet("me/followers/count")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
@@ -714,6 +789,10 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+
+        /// <summary>
+        /// Returns all users followed by the current user
+        /// </summary>
         [HttpGet("me/following")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
@@ -733,6 +812,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of users followed by the current user
+        /// </summary>
         [HttpGet("me/following/count")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
@@ -752,6 +834,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Adds the current user as a follower of a target user
+        /// </summary>
         [HttpPost("me/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -784,6 +869,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Removes the current user as a follower of a target user
+        /// </summary>
         [HttpDelete("me/following/{targetUsername}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserProfileViewModel))]
@@ -813,6 +901,7 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
         #endregion me
+
 
         #region status
         /// <summary>

@@ -2,6 +2,9 @@
 
 namespace PostlyApi.Models.DTOs
 {
+    /// <summary>
+    /// User data returned by the server
+    /// </summary>
     public class UserDataViewModel
     {
         // public data: 

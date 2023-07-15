@@ -15,7 +15,9 @@ namespace PostlyApi.Controllers
             _db = dbContext;
         }
 
-
+        /// <summary>
+        /// Endpoint for testing backend and database connection
+        /// </summary>
         [HttpGet("count")]
         [Authorize]
         public ActionResult<string> Count()

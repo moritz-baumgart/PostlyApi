@@ -9,6 +9,9 @@ namespace PostlyApi.Manager
         {
         }
 
+        /// <summary>
+        /// Returns the <see cref="Post"></see>/> with the given id
+        /// </summary>
         public Post? Get(int id)
         {
             return _db.Posts.FirstOrDefault(_ => _.Id == id);

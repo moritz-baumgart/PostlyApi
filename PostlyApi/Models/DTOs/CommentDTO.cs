@@ -1,5 +1,8 @@
 ﻿namespace PostlyApi.Models.DTOs
 {
+    /// <summary>
+    /// Comment information sent by the server
+    /// </summary>
     public class CommentDTO
     {
         public int Id { get; set; }

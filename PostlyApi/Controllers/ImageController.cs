@@ -21,8 +21,12 @@ namespace PostlyApi.Controllers
             _postManager = new PostManager(dbContext);
         }
 
+
         #region image
 
+        /// <summary>
+        /// Returns the image with the given id
+        /// </summary>
         [HttpGet("{imageId}")]
         public ActionResult Get([FromRoute] Guid imageId)
         {
@@ -36,6 +40,9 @@ namespace PostlyApi.Controllers
             return File(result.Data, result.ContentType);
         }
 
+        /// <summary>
+        /// Deletes the image with the given id from the database
+        /// </summary>
         [HttpDelete("{imageId}")]
         public ActionResult DeleteUserImage([FromRoute] Guid imageId)
         {
@@ -55,6 +62,9 @@ namespace PostlyApi.Controllers
 
         #region profile image
 
+        /// <summary>
+        /// Returns the profile image of a given user
+        /// </summary>
         [HttpGet("user/{username}")]
         public ActionResult GetProfileImage([FromRoute] string username)
         {
@@ -73,6 +83,9 @@ namespace PostlyApi.Controllers
             return File(result.Data, result.ContentType);
         }
 
+        /// <summary>
+        /// Updates the profile image of a given user
+        /// </summary>
         [HttpPut("user/{username}")]
         public ActionResult<string> UpdateProfileImage([FromRoute] string username)
         {
@@ -103,6 +116,9 @@ namespace PostlyApi.Controllers
             return Ok($"\"image/{image.Id}\"");
         }
 
+        /// <summary>
+        /// Deletes the profile image of a given user from the database
+        /// </summary>
         [HttpDelete("user/{username}")]
         public ActionResult DeleteUserImage([FromRoute] string username)
         {
@@ -128,6 +144,9 @@ namespace PostlyApi.Controllers
 
         #region image attached to post
 
+        /// <summary>
+        /// Returns the image attached to a given post
+        /// </summary>
         [HttpGet("post/{postId}")]
         public ActionResult GetPostImage([FromRoute] int postId)
         {
@@ -146,6 +165,9 @@ namespace PostlyApi.Controllers
             return File(result.Data, result.ContentType);
         }
 
+        /// <summary>
+        /// Updates the image attached to a given post
+        /// </summary>
         [HttpPut("post/{postId}")]
         public ActionResult<string> UpdatePostImage([FromRoute] int postId)
         {
@@ -176,6 +198,9 @@ namespace PostlyApi.Controllers
             return Ok($"\"image/{image.Id}\"");
         }
 
+        /// <summary>
+        /// Deletes the image attached to a given post from the database
+        /// </summary>
         [HttpDelete("post/{postId}")]
         public ActionResult DeletePostImage([FromRoute] int postId)
         {

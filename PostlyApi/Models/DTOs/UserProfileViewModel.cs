@@ -2,6 +2,9 @@
 
 namespace PostlyApi.Models.DTOs
 {
+    /// <summary>
+    /// Profile information returned by the server
+    /// </summary>
     public class UserProfileViewModel
     {
         public long Id { get; set; }

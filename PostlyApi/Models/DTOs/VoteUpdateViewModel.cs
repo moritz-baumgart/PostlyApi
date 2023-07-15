@@ -2,7 +2,9 @@
 
 namespace PostlyApi.Models.DTOs
 {
-    // returned by the server when updating a vote
+    /// <summary>
+    /// Returned by the server when updating a vote
+    /// </summary>
     public class VoteUpdateViewModel
     {
         public int PostId { get; set; } // the post that had a vote update

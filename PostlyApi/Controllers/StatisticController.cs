@@ -20,6 +20,9 @@ namespace PostlyApi.Controllers
 
         #region user statistics
 
+        /// <summary>
+        /// Returns the total number of users
+        /// </summary>
         [HttpGet("user/total")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -30,6 +33,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of users per day for a given timespan
+        /// </summary>
         [HttpGet("user/perday")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -48,6 +54,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the gender distribution in users
+        /// </summary>
         [HttpGet("user/gender")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<Gender, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -65,6 +74,9 @@ namespace PostlyApi.Controllers
 
         #region post statistics
 
+        /// <summary>
+        /// Returns the total number of posts
+        /// </summary>
         [HttpGet("post/total")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -75,6 +87,9 @@ namespace PostlyApi.Controllers
             return result;
         }
 
+        /// <summary>
+        /// Returns the number of posts per day in a given timespan
+        /// </summary>
         [HttpGet("post/perday")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -98,6 +113,9 @@ namespace PostlyApi.Controllers
 
         #region comment statistics
 
+        /// <summary>
+        /// Returns the total number of comments
+        /// </summary>
         [HttpGet("comment/total")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -108,6 +126,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of comments per day for a given timespan
+        /// </summary>
         [HttpGet("comment/perday")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -131,6 +152,9 @@ namespace PostlyApi.Controllers
 
         #region login statistics
 
+        /// <summary>
+        /// Returns the total number of logins
+        /// </summary>
         [HttpGet("login/total")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -141,6 +165,9 @@ namespace PostlyApi.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns the number of logins per day in a given timespan
+        /// </summary>
         [HttpGet("login/perday")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IDictionary<DateTime, int>))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

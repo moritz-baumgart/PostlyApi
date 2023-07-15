@@ -39,9 +39,11 @@ namespace PostlyApi.Models
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // composite key for vote
             modelBuilder.Entity<Vote>()
                 .HasKey(v => new { v.UserId, v.PostId });
 
+            // composite key for login
             modelBuilder.Entity<Login>()
                 .HasKey(l => new { l.CreatedAt, l.UserId });
         }

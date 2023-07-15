@@ -5,6 +5,9 @@ using PostlyApi.Utilities;
 
 namespace PostlyApi.Models.Requests
 {
+    /// <summary>
+    /// Request sent by a client to update user data
+    /// </summary>
     public class UserDataUpdateRequest
     {
         // public data: 

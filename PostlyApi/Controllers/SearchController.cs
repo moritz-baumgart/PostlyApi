@@ -19,6 +19,9 @@ namespace PostlyApi.Controllers
             _db = dbContext;
         }
 
+        /// <summary>
+        /// Returns a list of users matching the given username
+        /// </summary>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDTO>))]
         public IEnumerable<UserDTO> Get(
@@ -55,7 +58,9 @@ namespace PostlyApi.Controllers
             return result;
         }
 
-
+        /// <summary>
+        /// Returns a list of users matching the given filter parameters
+        /// </summary>
         [HttpGet("filter")]
         [Authorize(Roles = nameof(Role.Admin) + "," + nameof(Role.Moderator))]
         public IEnumerable<UserDTO> GetFiltered([FromQuery] UserFilterModel filter)

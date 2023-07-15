@@ -1,5 +1,8 @@
 ﻿namespace PostlyApi.Models.DTOs
 {
+    /// <summary>
+    /// User information sent by the server
+    /// </summary>
     public class UserDTO
     {
         public long Id { get; set; }

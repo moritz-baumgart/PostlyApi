@@ -8,7 +8,9 @@ namespace PostlyApi.Utilities
 {
     public class DbUtilities
     {
-
+        /// <summary>
+        /// Returns the currently logged in user
+        /// </summary>
         public static User? GetUserFromContext(HttpContext httpContext, PostlyContext dbContext)
         {
             if (httpContext.User.Identity is not ClaimsIdentity identity)
@@ -25,6 +27,9 @@ namespace PostlyApi.Utilities
             return dbContext.Users.Where(u => u.Username == usernameClaim.Value).FirstOrDefault();
         }
 
+        /// <summary>
+        /// Returns the <see cref="VoteType"/> of a given user on a given post. Null if there is no vote>
+        /// </summary>
         public static VoteType? GetVoteTypeOfUserForPost(User? user, Post post)
         {
             if (user == null || post == null) return null;
@@ -38,6 +43,9 @@ namespace PostlyApi.Utilities
             return vote.VoteType;
         }
 
+        /// <summary>
+        /// Returns true if a given user has commented on a given post, otherwise false
+        /// </summary>
         public static bool HasUserCommentedOnPost(User? user, Post post)
         {
             if (user == null || post == null) return false;
@@ -45,6 +53,9 @@ namespace PostlyApi.Utilities
             return post.Comments.Any(c => c.UserId == user.Id);
         }
 
+        /// <summary>
+        /// Maps a given <see cref="User"/> to a <see cref="UserDTO"/>
+        /// </summary>
         public static UserDTO GetUserDTO(User user)
         {
             var result = new UserDTO
@@ -58,6 +69,10 @@ namespace PostlyApi.Utilities
             return result;
         }
 
+        /// <summary>
+        /// Maps a given <see cref="User"/> to a <see cref="UserProfileViewModel"/>.
+        /// If a logged in user is requesting this information, their user interaction data will also be retrieved
+        /// </summary>
         public static UserProfileViewModel GetUserProfile(User user, PostlyContext _db, HttpContext httpContext)
         {
             _db.Entry(user).Collection(u => u.Follower).Load();
@@ -83,6 +98,9 @@ namespace PostlyApi.Utilities
             return result;
         }
 
+        /// <summary>
+        /// Maps a given <see cref="User"/> to a <see cref="UserDataViewModel"/>
+        /// </summary>
         public static UserDataViewModel GetUserData(User user)
         {
             var result = new UserDataViewModel
@@ -102,6 +120,10 @@ namespace PostlyApi.Utilities
             return result;
         }
 
+        /// <summary>
+        /// Maps a given <see cref="Post"/> to a <see cref="PostDTO"/>.
+        /// If a <see cref="User"/> is given, their post interaction data will also be retrieved
+        /// </summary>
         public static PostDTO GetPostDTO(Post post, User? user, PostlyContext _db)
         {
             _db.Entry(post).Reference(p => p.Author).Load();
@@ -125,6 +147,9 @@ namespace PostlyApi.Utilities
             return result;
         }
 
+        /// <summary>
+        /// Maps a given <see cref="Comment"/> to a <see cref="CommentDTO"/>
+        /// </summary>
         public static CommentDTO GetCommentDTO(Comment comment, PostlyContext _db)
         {
             _db.Entry(comment).Reference(p => p.Author).Load();

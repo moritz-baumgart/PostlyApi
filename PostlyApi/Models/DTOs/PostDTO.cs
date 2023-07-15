@@ -2,6 +2,9 @@
 
 namespace PostlyApi.Models.DTOs
 {
+    /// <summary>
+    /// Post information sent by the server
+    /// </summary>
     public class PostDTO
     {
         public int Id { get; set; }

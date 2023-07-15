@@ -9,11 +9,17 @@ namespace PostlyApi.Manager
         {
         }
 
+        /// <summary>
+        /// Returns the <see cref="User"/> with the given id
+        /// </summary>
         public User? Get(long id)
         {
             return _db.Users.FirstOrDefault(_ => _.Id == id);
         }
 
+        /// <summary>
+        /// Returns the <see cref="User"/> with the given username
+        /// </summary>
         public User? Get(string username)
         {
             return _db.Users.FirstOrDefault(_ => _.Username == username);
