@@ -1,7 +1,7 @@
 
 # PostlyApi
 
-PostlyApi is a .NET Web API written as a part of a University Project. It serves as the Backend of PostlyWebpage and PostlyApp. The goal of the project was to create a microblogging plattform.
+PostlyApi is a .NET Web API written as a part of a University Project. It serves as the Backend of [PostlyWebpage](https://github.com/moritz-baumgart/PostlyWebpage) and [PostlyApp](https://github.com/moritz-baumgart/PostlyApp). The goal of the project was to create a microblogging plattform.
 
 
 
